@@ -16,8 +16,9 @@ the camera never cuts, and at the end it pulls back until all three are playing 
 cursor writes the name in one stroke.
 
 v8 (after v7's 「看起来只有一个 prompt」): the camera lands on every bar, and every send is the birth of its film.
-Richer films: Dayline gets an event sheet on iPhone, Hush a charging-case product shot, FRAME/26 a crowd in front of
-its screen. The prompt glyph is a terminal's: a grey chevron and a solid block cursor.
+Richer films: Dayline gets an event sheet on iPhone, Hush a charging-case product shot. The prompt glyph is a
+terminal's: a grey chevron and a solid block cursor. After the loop the three films gather into one row, all the
+height of the Hush frame, centred over the bar.
 
  t              beat                              camera                                  carries into the next beat
  0.00–4.40      prompt 1, no music                macro, two dead-still holds, one glide  the bar
@@ -32,8 +33,8 @@ its screen. The prompt glyph is a terminal's: a grey chevron and a solid block c
  16.00–16.92    "Hush."  bar 3: "event"           pull back to Hush + bar 3; dead still   the bar
  16.92          DROP: bar 3 → a line → the LED    whip along the line                     the line is the promo's first grid line
  17.28–21.10    FRAME/26 promo (as v7)            pan down the poster                     it wipes back to its first frame
- 21.10–23.18    the loop, once; the crowd rises   pull out to the screen in its room      —
- 23.18–26.60    all three at once                 pull back over the strip                the bar
+ 21.10–23.18    the loop, once                    pull out to the screen                  —
+ 23.30–25.90    the films gather into one row     pull back over the row                  the bar
  26.835         the stop: everything freezes
  27.357–28.45   the block cursor writes onetake   push in, following the pen              —
  28.55          GitHub mark · open source         dead still to the end
