@@ -65,8 +65,11 @@ that differ in that idea — not three stories told with the same cards:
 - **a chain reaction** — every beat is the collision that starts the next (`cases/knockon-15s`);
 - or a physical metaphor, one continuous surface, a typographic system…
 
-For each: the hook frame, what carries every boundary, what it rules out (no cards? no cuts?). Show the three and
-let the user pick. The template's story — kinetic words → typed prompt → ticking checklist → result → staccato
+For each: the hook frame, what carries every boundary, what it rules out (no cards? no cuts?), and **its look** —
+a preset from `looks/` (`python3 scripts/look.py sheet` → `gallery/sheets/looks.png`: paper, dusk, tabletop,
+ultramarine, riso, ember, each measured from an accepted film), the product's own colours
+(`look.py from-shot shots/*.png --out look.json`), or one made for this film. Show the three and let the user pick.
+The template's story — kinetic words → typed prompt → ticking checklist → result → staccato
 hits → black wordmark — is one concept, never the default: an operation demo built on it passed every oracle leg
 (carry 1.00) and was sent back as 「和 motion web 很像…没有创造力」.
 
@@ -120,6 +123,12 @@ motion-web film (kinetic words, typed prompt, ticking checklist, fly-throughs, l
 one continuous hand path every sim reads from) — copy its beats only when that is the concept picked in §2;
 otherwise keep its contract and helpers and write the concept's own beats. Everything is `f(t)`; sims are pre-simulated once at 240 Hz and
 sampled. Preview `?play`, pin `?t=6.4&hud`. `references/motion-library.md`, `references/composition.md`.
+
+**The look ships with the comp.** `python3 scripts/look.py apply ember cases/my-film/comp.html` (or a `look.json`)
+writes `look.js` beside it: the eight colours as CSS variables and `LOOK.color`, three OFL faces subset to the glyphs
+the comp sets and inlined, so the `file://` render gets real type. Load it before the comp's script, write against
+`var(--ink)` / `var(--display)` or `LOOK.font('display', 96)`, and chain `window.__ready` on `LOOK.ready`. Re-run it
+after copy changes; it names any character a face lacks (`--cjk <font>` for Chinese / Japanese / Korean).
 
 **Camera: keyed, but operated.** `OM.camera(t, keys)` puts the camera where each beat needs it; the feel of an
 operator comes from how the keys are placed: key the subject ~0.1 s ahead on `sineInOut` to follow it, key the landing
@@ -182,7 +191,8 @@ behind a snap and nothing else noticed. With `--ref`, the reference's energy map
 - **Never default to the template's story.** Three concepts that differ in their central idea; the user picks
   (§2). A new film in the template's beats reads as the template, however good the craft.
 - **Never carry the last film's look into the next.** Palette, stage, camera grammar, transitions: the tools
-  (replica, narration, time warp) are reusable, the look is not. Name those choices in the concept round.
+  (replica, narration, time warp) are reusable, the look is not. Name those choices in the concept round. A preset
+  from `looks/` is fine when it is picked there by name; a silent default is not.
 - **A second language never forks the composition.** `?lang=`, a time warp, and the source cut checked
   pixel-identical. A copied comp doubles every later fix.
 - **Never cut on a metronome.** Equal shot lengths read as slides no matter how good each shot is.
@@ -217,8 +227,10 @@ behind a snap and nothing else noticed. With `--ref`, the reference's energy map
 | path | what |
 |---|---|
 | `lib/motion.js` | the move library → `window.OM`: curves, springs, entrances, carries, contact, sims, camera, fluid |
+| `looks/looks.json` | six starting looks (eight colour tokens, three faces each) measured from accepted films; `looks/fonts/` the OFL faces and their licences |
+| `scripts/look.py` | `list` / `sheet` / `check` the looks, `from-shot` a look from product screenshots, `apply` → `look.js` with the faces subset and inlined |
 | `lib/ui_kit.js` | → `window.UIK`: a rebuilt UI on the plane (`stage`, `domLocal`, `rectCache`, `flow`), the content-hugging `glowRing`, legibility (`screenPx`, `zoomFor`), languages (`tr`, `loadFont`), `timeWarp` between a narration and the authored timeline, `subAt` |
-| `gallery/gallery.html` | one live demo per move (`?demo=ribbon&play`); `gallery/sheets/<move>.png` six frames + speed graph |
+| `gallery/gallery.html` | one live demo per move (`?demo=ribbon&play`); `gallery/sheets/<move>.png` six frames + speed graph; `gallery/sheets/looks.png` the looks |
 | `scripts/analyze_ref.py` | reference → energy map, cuts, stillness, contact sheets, motion line (t80, smear), JSON |
 | `scripts/record_footage.py` | config → real-time recordings with action marker → 30 fps frames + paths |
 | `scripts/probe.py` | comp → what is on screen per frame → continuity per boundary, curves per move |
@@ -247,6 +259,6 @@ behind a snap and nothing else noticed. With `--ref`, the reference's energy map
 | `cases/ebb-15s/` | case 7: one take through five places, carried by a field of light — keyed camera with a hand, shake and depth, odometer digits, a flood that drains in rings onto the next scene, silk cards on belts at three depths |
 | `cases/<film>/` | every film made with this skill: the film and a README (beat sheet, numbers, what was rejected and why). Also: overlap, unbroken, skill-demo, and onetake's own launch film. The films' source code is not included |
 
-Requires: python3 with `playwright` (chromium), `numpy`, `scipy`, `Pillow`, `matplotlib`; `opencv-python` for the
+Requires: python3 with `playwright` (chromium), `numpy`, `scipy`, `Pillow`, `matplotlib`, `fonttools` + `brotli` (looks); `opencv-python` for the
 motion line; `ffmpeg` / `ffprobe`; `node` for the library tests. Narration: `faster-whisper` (python3), and Kokoro
 (`kokoro-onnx`, `soundfile`, plus `misaki[ja]` and `unidic-lite` for Japanese) in `~/.cache/kokoro/venv`.

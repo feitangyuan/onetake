@@ -4,9 +4,10 @@
 <head>
 <meta charset="utf-8">
 <title>onetake · composition</title>
-<!-- FONTS: the motion-web film shipped subset faces as faces.css (families 'Sans','Serif','Mono', generated with
-     motion-web's subset_fonts.py pack --text-from). Without it the stacks below fall back to Inter / Georgia /
-     system mono. Add <link rel="stylesheet" href="faces.css"> once you have real faces; the render waits on document.fonts.ready. -->
+<!-- FONTS: the motion-web film shipped subset faces as faces.css (families 'Sans','Serif','Mono'). Without it the
+     stacks below fall back to Inter / Georgia / system mono. Its look is `paper` in looks/looks.json; for this or any
+     other look, `python3 scripts/look.py apply <look> comp.html` writes look.js (colours + inlined faces) — load it
+     before the script below and write against var(--ink) / var(--display); the render waits on window.__ready. -->
 <style>
 :root{ --bg:#f8f8f6; --ink:#161616; --grey:#8f8f8b; --green:#17a05e; --red:#b42323; --card:#fff; --line:#e8e8e4; }
 html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--bg)}

@@ -1,0 +1,85 @@
+{
+  "about": "Starting looks, each measured from an accepted film and set in OFL faces that ship in looks/fonts. A look is picked by name in the concept round (SKILL.md §2), or made from the product with `look.py from-shot`; it is never a silent default. Every look has the same eight colours and three faces, so a comp written against the tokens can switch looks by name.",
+  "tokens": {
+    "ground": "the frame's ground — the 70 % of the picture",
+    "deep": "a second ground: vignette edge, far plane, a well under cards",
+    "card": "surfaces that sit on the ground",
+    "line": "hairlines, card edges, lattice",
+    "mute": "labels and secondary text; ≥ 3:1 on ground",
+    "ink": "type and the subject; ≥ 4.5:1 on ground",
+    "accent": "the one colour that means something",
+    "accent2": "its partner, used rarely"
+  },
+  "faces": {
+    "Inter": { "file": "Inter.ttf", "weight": "100 900", "pin": { "slnt": 0 }, "fallback": "system-ui, sans-serif" },
+    "Instrument Sans": { "file": "InstrumentSans.ttf", "weight": "400 700", "pin": { "wdth": 100 }, "fallback": "system-ui, sans-serif" },
+    "Instrument Serif": { "file": "InstrumentSerif.ttf", "weight": "400", "fallback": "Georgia, serif" },
+    "Fraunces": { "file": "Fraunces.ttf", "weight": "100 900", "pin": { "SOFT": 0, "WONK": 0 }, "fallback": "Georgia, serif" },
+    "Archivo": { "file": "Archivo.ttf", "weight": "100 900", "pin": { "wdth": 100 }, "fallback": "system-ui, sans-serif" },
+    "Archivo Condensed": { "file": "Archivo.ttf", "weight": "100 900", "pin": { "wdth": 62 }, "fallback": "'Arial Narrow', sans-serif" },
+    "Geist": { "file": "Geist.ttf", "weight": "100 900", "fallback": "system-ui, sans-serif" },
+    "Geist Mono": { "file": "GeistMono.ttf", "weight": "100 900", "fallback": "ui-monospace, Menlo, monospace" }
+  },
+  "looks": {
+    "paper": {
+      "from": "cases/motion-web-15s",
+      "mood": "white page, black type, one green tick — calm product UI, lots of air",
+      "color": { "ground": "#f8f8f6", "deep": "#ededea", "card": "#ffffff", "line": "#e4e4e0", "mute": "#83837f", "ink": "#161616", "accent": "#17a05e", "accent2": "#b42323" },
+      "type": {
+        "display": { "face": "Instrument Serif", "weight": 400, "tracking": -0.01 },
+        "text": { "face": "Inter", "weight": 500, "tracking": -0.02 },
+        "mono": { "face": "Geist Mono", "weight": 400, "tracking": 0 }
+      }
+    },
+    "dusk": {
+      "from": "cases/one-dot-15s",
+      "mood": "near-black violet night, one lit violet subject, warm cream type",
+      "color": { "ground": "#15131c", "deep": "#08070b", "card": "#1f1c29", "line": "#34313f", "mute": "#807c8c", "ink": "#efece6", "accent": "#7c6cff", "accent2": "#f4c64f" },
+      "type": {
+        "display": { "face": "Geist", "weight": 600, "tracking": -0.03 },
+        "text": { "face": "Inter", "weight": 450, "tracking": -0.01 },
+        "mono": { "face": "Geist Mono", "weight": 400, "tracking": 0 }
+      }
+    },
+    "tabletop": {
+      "from": "cases/knockon-15s",
+      "mood": "warm grey table under soft light, white objects, a red-orange cause",
+      "color": { "ground": "#f2efe9", "deep": "#e3dfd7", "card": "#ffffff", "line": "#d5d0c6", "mute": "#7d7970", "ink": "#1b1a18", "accent": "#ff5a36", "accent2": "#17a05e" },
+      "type": {
+        "display": { "face": "Inter", "weight": 700, "tracking": -0.035 },
+        "text": { "face": "Inter", "weight": 500, "tracking": -0.01 },
+        "mono": { "face": "Geist Mono", "weight": 400, "tracking": 0 }
+      }
+    },
+    "ultramarine": {
+      "from": "cases/clearing-15s",
+      "mood": "a saturated blue field, white type, one yellow — poster, not interface",
+      "color": { "ground": "#3548ec", "deep": "#1a28b0", "card": "#2436d0", "line": "#5566f0", "mute": "#b4bcf8", "ink": "#ffffff", "accent": "#ffd84a", "accent2": "#ff8a52" },
+      "type": {
+        "display": { "face": "Archivo", "weight": 800, "tracking": -0.02 },
+        "text": { "face": "Inter", "weight": 500, "tracking": -0.01 },
+        "mono": { "face": "Geist Mono", "weight": 500, "tracking": 0.02 }
+      }
+    },
+    "riso": {
+      "from": "cases/overlap-15s",
+      "mood": "cream stock, fluorescent pink and blue inks, condensed headlines — printed matter",
+      "color": { "ground": "#f4efe2", "deep": "#c9c2b2", "card": "#fbf8f0", "line": "#ddd6c6", "mute": "#7a7263", "ink": "#34322e", "accent": "#ff48b0", "accent2": "#0078bf" },
+      "type": {
+        "display": { "face": "Archivo Condensed", "weight": 800, "tracking": 0 },
+        "text": { "face": "Instrument Sans", "weight": 500, "tracking": 0 },
+        "mono": { "face": "Geist Mono", "weight": 400, "tracking": 0.02 }
+      }
+    },
+    "ember": {
+      "from": "cases/ebb-15s",
+      "mood": "warm paper and brown ink, an orange light — editorial serif, slow and soft",
+      "color": { "ground": "#fdfbf7", "deep": "#f3ebe1", "card": "#fffaf5", "line": "#e6dace", "mute": "#8e7a69", "ink": "#2b1d14", "accent": "#ec682e", "accent2": "#f4965c" },
+      "type": {
+        "display": { "face": "Fraunces", "weight": 400, "tracking": -0.02 },
+        "text": { "face": "Instrument Sans", "weight": 500, "tracking": -0.005 },
+        "mono": { "face": "Geist Mono", "weight": 400, "tracking": 0 }
+      }
+    }
+  }
+}
