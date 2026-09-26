@@ -99,7 +99,7 @@ before acceptance is 1080p30.
 **Shutter.** A screenshot is an instant, so a fast move strobes into sharp copies; a camera integrates while its
 shutter is open. For each frame render.py seeks several times across the open shutter (180° = half a frame
 interval, centred on the frame time) and averages the captures in linear light — `--samples` (8) of them, or, when
-the page defines `__motion`, as many as keep neighbouring copies `--gap` (6) px apart on screen (4–48, set by
+the page defines `__motion`, as many as keep neighbouring copies `--gap` px apart on screen (4–48, set by
 `--samples-min` / `--samples-max`). It captures the two ends first; if they are identical the frame is a hold and
 is written as is. Because `__seek` is pure this is the real
 integral, not a blur filter: a 100 px box moving 167 px/frame at 30 fps left a 173 px streak with a 27 px solid
@@ -202,18 +202,6 @@ dryness — drawn as 56 hair polylines spread across the width:
 
 What didn't read: a few thick, even hairs (a plastic band); width swelling from zero at the touch-down (fans); strokes
 under ~140 px (tufts).
-
-## Fluid grounds — a light field and silk
-
-`OM.lightField` and `OM.silk` are both pure functions of t. Two rules came out of matching them to the references:
-
-- **Compute the fluid small and let the browser blur it.** A 16×20 field upscaled with smoothing and a canvas
-  `blur()` is smoother than any full-resolution noise and costs nothing per frame, and it stays deterministic. The detail
-  you are tempted to add is what turns silk into a contour map.
-- **Silk needs a fold.** A ramp from dark to light reads as a gradient; put a darker band between two bright hues and
-  one thin specular wisp on top, and it reads as cloth catching light.
-- A light field works as punctuation only because it is *always there*: at rest it is a low glow under the content,
-  so a flood that fills the frame and drains is the same object moving, not a wipe.
 
 ## Things that bit
 

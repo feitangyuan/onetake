@@ -140,7 +140,7 @@ The shutter is real motion blur: each moving frame is several seeks across the o
 light; holds are detected and skip it. A capture is a Chrome screenshot (~150 ms; the page itself draws in under 1 ms),
 so render.py runs `--workers` browsers in parallel processes (default cores − 2, max 8). A page that defines
 `window.__motion(t0, t1)` — the farthest anything travels on screen, camera included — gets as many captures per frame
-as keep copies 6 px apart (4–48); a fixed 8 stepped the one-dot film's 633 px/frame opening into bands. Budget: the
+as keep copies `--gap` px apart, between `--samples-min` and `--samples-max`; if a fast move shows bands, tighten the gap and raise the cap. Budget: the
 one-dot camera cut took 103 s for 2,480 captures on 8 workers (one browser: ~0.2 s a capture, ~8.5 minutes) — tell
 the user the estimate before starting a long render.
 

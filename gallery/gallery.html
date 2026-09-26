@@ -248,40 +248,6 @@ const DEMOS = {
     draw(t) { clear(); const [w, s] = this.sc(t); g.save(); g.globalAlpha = w.op; g.translate(960, 540 + w.dy); g.scale(s, s); windowFrame(-700, -420, 1400, 840, { tint: C.peach }); g.restore(); },
     track(t) { const [w, s] = this.sc(t); return { window: { x: 960, y: 540 + w.dy, w: 1400 * s, h: 840 * s } }; } },
 
-  // ─────────────── fluid — from ebb ───────────────
-  swiftSpring: { group: 'fluid', from: 'ebb', note: "SwiftUI's named springs: .smooth, .snappy, .bouncy — Spring(duration, bounce) as ζ = 1 − b, ω = 2π/d", dur: 1.4,
-    draw(t) { clear(); ['smooth', 'snappy', 'bouncy'].forEach((k, i) => { const v = OM.swiftSpring(t - 0.15, k), x = 460 + v * 1000, y = 360 + i * 180;
-      g.fillStyle = '#e8e8e4'; g.fillRect(460, y - 2, 1000, 4); g.beginPath(); g.arc(x, y, 34, 0, 7); g.fillStyle = [C.ink, C.red, C.green][i] || C.ink; g.fill(); text('.' + k, 300, y, { size: 30, align: 'left' }); }); },
-    track(t) { const o = {}; ['smooth', 'snappy', 'bouncy'].forEach((k, i) => { o[k] = [460 + OM.swiftSpring(t - 0.15, k) * 1000, 360 + i * 180]; }); return o; } },
-
-  lightField: { group: 'fluid', from: 'ebb', note: 'a ground of light that is always there: it rises, floods the frame in ≤ 0.4 s, and drains — the same object moving, not a wipe', dur: 2.6,
-    level(t) { return t < 1.2 ? 0.5 * OM.ease.smooth(OM.seg(t, 0.1, 1.1)) : t < 1.6 ? OM.lerp(0.5, 1.05, OM.ease.expoOut(OM.seg(t, 1.2, 1.5))) : 1.05 * (1 - OM.ease.smoother(OM.seg(t, 1.6, 2.5))); },
-    draw(t) { clear(); g.fillStyle = '#fdfbf7'; g.fillRect(0, 0, 1920, 1080); const f = OM.lightField(this.level(t));
-      g.save(); g.translate(f.cx, f.cy); g.rotate(f.tilt); g.scale(f.rx / f.ry, 1); const gr = g.createRadialGradient(0, 0, 0, 0, 0, f.ry);
-      [[236, 104, 46, 1], [244, 150, 92, 1], [250, 204, 170, 1], [253, 236, 222, 0.75], [253, 236, 222, 0]].forEach((c, i) => gr.addColorStop(f.stops[i], `rgba(${c.join(',')})`));
-      g.fillStyle = gr; g.fillRect(-f.ry, -f.ry, 2 * f.ry, 2 * f.ry); g.restore(); },
-    track(t) { const f = OM.lightField(this.level(t)); return { horizon: [960, Math.max(0, f.horizon)] }; } },
-
-  ripple: { group: 'fluid', from: 'ebb', note: 'a flood drains as three rings leaving one point, alternating tints; the world shows through the innermost', dur: 2.0,
-    draw(t) { clear(); g.fillStyle = '#fdfbf7'; g.fillRect(0, 0, 1920, 1080); card(760, 330, 400, 420); const r = OM.ripple(t, 0.2).r, hole = R => { g.moveTo(960 + R, 540); g.arc(960, 540, Math.max(0.01, R), 0, 7, true); };
-      g.beginPath(); g.rect(0, 0, 1920, 1080); hole(r[0]); g.fillStyle = 'rgb(240,120,60)'; g.fill('evenodd');
-      g.beginPath(); g.arc(960, 540, r[0], 0, 7); hole(r[1]); g.fillStyle = 'rgb(248,196,158)'; g.fill('evenodd');
-      g.beginPath(); g.arc(960, 540, r[1], 0, 7); hole(r[2]); g.fillStyle = 'rgb(252,226,206)'; g.fill('evenodd'); },
-    track(t) { const r = OM.ripple(t, 0.2).r; return { ring0: { x: 960, y: 540, w: 2 * r[0], h: 2 * r[0] }, ring2: { x: 960, y: 540, w: 2 * r[2], h: 2 * r[2] } }; } },
-
-  silk: { group: 'fluid', from: 'ebb', note: 'domain-warped noise on a 16×20 grid, ramped through a dark fold, drawn up with a blur, one pale wisp', dur: 3.0,
-    setup() { this.c = document.createElement('canvas'); this.c.width = 16; this.c.height = 20; this.x = this.c.getContext('2d'); this.im = this.x.createImageData(16, 20); },
-    draw(t) { clear(); [['peach', 3, 360], ['ember', 24, 800], ['dusk', 61, 1240]].forEach(([r, seed, x]) => {
-      OM.silk(t * 1.5, seed, OM.silk.ramps[r], { out: this.im.data }); this.x.putImageData(this.im, 0, 0);
-      g.save(); g.beginPath(); g.roundRect(x, 250, 320, 406, 30); g.clip(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.filter = 'blur(26px)'; g.drawImage(this.c, x - 37, 213, 394, 480); g.restore();
-      text(r, x + 20, 700, { size: 26, align: 'left', color: C.grey }); }); },
-    track(t) { return { card: { x: 520, y: 453, w: 320, h: 406 } }; } },
-
-  carouselLoop: { group: 'fluid', from: 'ebb', note: 'a belt that never rests until told to: constant speed after a .smooth start; its clock slows every card with it', dur: 3.2,
-    setup() { this.B = OM.carouselLoop({ dur: 3.4, start: 0.2, speed: 420, stop: [2.3, 2.8] }); },
-    draw(t) { clear(); const b = this.B.at(t); for (let i = -2; i < 9; i++) { const x = ((i * 300 - b.x) % 3300 + 3300) % 3300 - 600; card(x, 400, 260, 300, { r: 26 });
-      g.fillStyle = [C.lilac, C.red, C.green][((i % 3) + 3) % 3]; g.globalAlpha = 0.35; g.fillRect(x + 20, 420 + 120 * (0.5 + 0.5 * Math.sin(b.tau * 3 + i)), 220, 16); g.globalAlpha = 1; } },
-    track(t) { const b = this.B.at(t); return { belt: [960 - (b.x % 300), 550] }; } },
 };
 
 const q = new URLSearchParams(location.search), name = q.get('demo');
