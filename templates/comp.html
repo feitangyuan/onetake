@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>onetake · composition</title>
+<!-- FONTS: the motion-web film shipped subset faces as faces.css (families 'Sans','Serif','Mono', generated with
+     motion-web's subset_fonts.py pack --text-from). Without it the stacks below fall back to Inter / Georgia /
+     system mono. Add <link rel="stylesheet" href="faces.css"> once you have real faces; the render waits on document.fonts.ready. -->
+<style>
+:root{ --bg:#f8f8f6; --ink:#161616; --grey:#8f8f8b; --green:#17a05e; --red:#b42323; --card:#fff; --line:#e8e8e4; }
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+body{font-family:'Sans',Inter,system-ui,sans-serif;color:var(--ink);font-feature-settings:"ss01","cv11"}
+#stage{position:absolute;inset:0;overflow:hidden;background:var(--bg)}
+.abs{position:absolute;left:0;top:0;will-change:transform,opacity}
+/* scene 1 words */
+#w1{font-size:64px;font-weight:500;letter-spacing:-.02em;white-space:nowrap;left:0;right:0;top:430px;text-align:center}
+#w1 span{display:inline-block;margin:0 .14em}
+#w1 .red{color:var(--red)}
+/* wordmark */
+#mark{font-family:'Serif',Georgia,serif;font-size:132px;line-height:1;letter-spacing:-.01em;white-space:nowrap;transform-origin:50% 50%}
+#mark span{display:inline-block;transform-origin:50% 88%}
+#tag{font-size:30px;font-weight:500;color:var(--ink);white-space:nowrap;transform-origin:50% 50%}
+#tag b{color:var(--green);font-weight:600;display:inline-block;transform-origin:50% 70%}
+.dot{position:absolute;border-radius:50%;background:var(--ink)}
+/* cards */
+.card{position:absolute;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 24px 60px -24px rgba(20,20,20,.22),0 2px 6px rgba(20,20,20,.05);will-change:transform,opacity,filter;transform-origin:50% 50%}
+#prompt{width:760px;height:168px;left:580px;top:456px}
+#prompt .txt{position:absolute;left:34px;top:28px;font-size:29px;color:var(--ink);white-space:pre;font-weight:450}
+#prompt .txt i{display:inline-block;width:2px;height:30px;background:var(--ink);vertical-align:-6px;margin-left:2px}
+#prompt .row{position:absolute;left:24px;right:24px;bottom:20px;height:48px}
+#prompt .pill{position:absolute;top:0;height:44px;padding:0 18px;border:1px solid var(--line);border-radius:999px;font-size:20px;line-height:44px;color:var(--grey)}
+#prompt .send{position:absolute;right:0;top:0;width:44px;height:44px;border-radius:50%;background:var(--ink);will-change:transform,background}
+#prompt .send:after{content:"";position:absolute;left:15px;top:13px;width:12px;height:12px;border-left:2.5px solid #fff;border-top:2.5px solid #fff;transform:rotate(45deg)}
+#panel{width:820px;left:550px;top:300px;padding:26px 30px 22px}
+#panel h4{margin:0 0 18px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+#panel h4 small{color:var(--grey);font-weight:500;margin-left:12px;font-family:'Mono',monospace;font-size:18px}
+#panel .ln{display:flex;align-items:center;gap:16px;height:52px;font-size:24px;font-weight:450;border-top:1px solid var(--line)}
+#panel .ln .bx{width:24px;height:24px;border-radius:7px;border:1.5px solid #cfcfca;position:relative;flex:none;will-change:transform,background}
+#panel .ln .bx:after{content:"";position:absolute;left:7px;top:3px;width:6px;height:12px;border-right:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(45deg);opacity:0}
+#panel .ln.on .bx{background:var(--green);border-color:var(--green)}
+#panel .ln.on .bx:after{opacity:1}
+#panel .ln.on .t{color:var(--grey);text-decoration:line-through;text-decoration-color:#c9c9c4}
+#panel .ln .t{font-family:'Mono',monospace;font-size:23.5px}
+#panel .ln .t b{color:var(--green);font-weight:400}
+#panel .ln.on.pass .t{text-decoration:none;color:var(--ink)}
+/* flying screens */
+.screen{position:absolute;width:1000px;height:625px;left:460px;top:228px;border-radius:14px;overflow:hidden;background:#fff;
+  box-shadow:0 40px 90px -30px rgba(20,20,20,.35),0 0 0 1px rgba(0,0,0,.05);will-change:transform,filter,opacity;transform-origin:50% 50%}
+.screen img{position:absolute;left:0;top:0;width:1000px;height:625px;display:block}
+.screen .lab{position:absolute;left:0;right:0;bottom:-46px;text-align:center;font-family:'Mono',monospace;font-size:22px;color:var(--grey)}
+/* micro cards */
+.mini{width:460px;height:270px}
+.mini canvas{position:absolute;left:0;top:0;width:460px;height:270px}
+.mini .cap{position:absolute;left:22px;top:16px;font-family:'Mono',monospace;font-size:19px;color:var(--grey)}
+/* hold beat: browser window */
+#win{position:absolute;left:260px;top:120px;width:1400px;height:840px;border-radius:16px;overflow:hidden;background:#fff;
+  box-shadow:0 50px 120px -40px rgba(20,20,20,.35),0 0 0 1px rgba(0,0,0,.06);transform-origin:50% 50%;will-change:transform,opacity}
+#win .bar{position:absolute;left:0;right:0;top:0;height:44px;background:#f1f1ee;border-bottom:1px solid var(--line)}
+#win .bar i{position:absolute;top:15px;width:12px;height:12px;border-radius:50%;background:#d9d9d4}
+#win .bar .url{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:420px;height:24px;border-radius:6px;background:#fff;font-family:'Mono',monospace;font-size:14px;color:var(--grey);text-align:center;line-height:24px}
+#win img{position:absolute;left:0;top:44px;width:1400px;height:875px;display:block}
+/* staccato + end */
+#stac{left:0;right:0;top:500px;text-align:center;font-size:66px;font-weight:800;letter-spacing:.02em;text-transform:uppercase}
+#end{position:absolute;inset:0;background:#0b0b0b;display:flex;align-items:center;justify-content:center;font-family:'Serif',Georgia,serif;font-size:128px;color:#fff;letter-spacing:-.01em}
+/* cursor */
+#cursor{position:absolute;left:0;top:0;width:30px;height:40px;will-change:transform;filter:drop-shadow(0 2px 5px rgba(0,0,0,.3))}
+#hud{position:absolute;right:14px;bottom:10px;font:13px 'Mono',monospace;color:#c00;display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="w1" class="abs"><span>Web motion</span><span>is usually</span><span class="red">decoration.</span></div>
+  <div id="mark" class="abs"></div>
+  <div id="tag" class="abs">makes it <b id="mv">move</b></div>
+  <div id="prompt" class="card"><div class="txt"><span id="ptxt"></span><i id="caret"></i></div>
+    <div class="row"><div class="pill" style="left:0">+</div><div class="pill" style="left:66px">motion-web</div><div class="send" id="send"></div></div></div>
+  <div id="panel" class="card"><h4>Build<small>motion-web · handfeel-tune</small></h4><div id="lines"></div></div>
+  <div id="screens"></div>
+  <div id="minis"></div>
+  <div id="win"><div class="bar"><i style="left:16px"></i><i style="left:36px"></i><i style="left:56px"></i><div class="url">localhost:5173 — char-curtain</div></div><img id="winimg" alt=""></div>
+  <div id="stac" class="abs"></div>
+  <div id="end">motion-web</div>
+  <svg id="cursor" viewBox="0 0 34 44"><path d="M4 3 L30 22 L18 24 L26 40 L20 43 L12 27 L4 36 Z" fill="#111" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  <div id="hud"></div>
+</div>
+<script src="motion.js"></script><!-- lib/motion.js, copied next to this file → window.OM -->
+<script>
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// onetake composition template — everything below is a pure function of t (seconds).
+// Contract: window.__seek(t) → Promise (resolves after this frame's images are decoded), window.__ready,
+//           window.__meta {dur,fps,w,h}. Query: ?play (real-time loop) ?t=6.4&hud (pin a frame).
+// EDIT HERE (in order): 1 INFO/FR after record_footage.py · 2 beats · 3 copy (PROMPT_TEXT, LINES, SCREENS,
+//           MINIS, STAC) · 4 the HAND knots so the pointer causes what the footage shows · 5 nothing else
+//           until stills.py looks right. The moves are OM.* from motion.js — call them, do not re-derive springs
+//           inline. Catalogue and sheets: references/motion-library.md, gallery/sheets/.
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// ────────────────────────────────────────── timeline ──────────────────────────────────────────
+const FPS=30, DUR=15, FR='../footage/frames/';        // FPS = footage frame rate (record_footage.py extracts 30); DUR = film length
+window.__meta={dur:DUR,fps:FPS,w:1920,h:1080};       // render.py reads dur from here
+// from footage/info.json — n frames, mark = frame where the input began
+const INFO={"critter":{"n":278,"mark":108},"demo-after":{"n":215,"mark":98},"press-stack":{"n":316,"mark":176},"char-curtain":{"n":247,"mark":98}};
+// beats (seconds) — shot lengths vary ≥4× on purpose: words .35 s apart, holds 1.15 s, staccato .22 s. verify_promo.py checks CV ≥ .25
+const W1=[0.15,0.50,0.92], W1_OUT=1.55;
+const MARK_IN=1.65, TAG_IN=2.25, POP=2.32, MARK_UP=3.0;
+const PROMPT_IN=2.95, TYPE0=3.15, TYPE_CPS=38, CLICK=4.45, PROMPT_OUT=4.75;
+const PANEL_IN=4.85, LINE0=5.15, LINE_DT=0.24, PANEL_OUT=7.0;
+const SCREENS=[ {name:'critter',    label:'spring follow · velocity lean', t:7.05},
+                {name:'demo-after', label:'jelly · velocity tilt',          t:7.95},
+                {name:'press-stack',label:'sticky stack · scroll choreography', t:8.85} ];
+const SCREEN_HOLD=0.9;
+const MINIS=[ {kind:'magnet', cap:'magnetic button',  x:470,  y:400, t:9.55, out:10.40},
+              {kind:'follow', cap:'spring follow',    x:1090, y:330, t:10.00,out:10.95},
+              {kind:'jelly',  cap:'jelly · soft body',x:700,  y:520, t:10.75,out:11.60},
+              {kind:'verlet', cap:'verlet string',    x:1180, y:420, t:11.35,out:12.15} ];
+const WIN_IN=12.1, WIN_OUT=13.25;
+const STAC=[[13.25,'motion'],[13.50,'is'],[13.72,'the'],[13.94,'material']], STAC_END=14.3;
+const END_T=14.3;
+
+// ────────────────────────────────────────── math: motion.js ──────────────────────────────────────────
+const {clamp, lerp, sstep, ssstep, spring:spr, ring, spline} = OM;
+
+// ────────────────────────────────────────── DOM ──────────────────────────────────────────
+const $=id=>document.getElementById(id);
+const markEl=$('mark'); const MARKL=[...'motion-web'].map(ch=>{const s=document.createElement('span');s.textContent=ch;markEl.appendChild(s);return s;});
+const PROMPT_TEXT='make the hero feel alive — springs, not fades';
+const LINES=[['Intent: handfeel-tune'],['Read handfeel.md · §1 springs, §7 following'],['Render layer: canvas2d · web font, not the system stack'],['Spring k=90 · damp .86 · velocity coupling'],['Jelly wobble · squash along the leap'],['Reduced-motion fallback · nothing hidden'],['verify_case.py → <b>VERDICT: PASS</b>','pass']];
+const lineEls=LINES.map(([html,cls])=>{const d=document.createElement('div');d.className='ln'+(cls?' '+cls:'');d.innerHTML=`<div class="bx"></div><div class="t">${html}</div>`;$('lines').appendChild(d);return d;});
+const screenEls=SCREENS.map(s=>{const d=document.createElement('div');d.className='screen';d.innerHTML=`<img alt=""><div class="lab">${s.label}</div>`;$('screens').appendChild(d);s.el=d;s.img=d.querySelector('img');s.cur='';Object.assign(s,INFO[s.name]);return d;});
+const miniEls=MINIS.map(m=>{const d=document.createElement('div');d.className='card mini';d.style.left=m.x+'px';d.style.top=m.y+'px';d.innerHTML=`<canvas width="920" height="540"></canvas><div class="cap">${m.cap}</div>`;$('minis').appendChild(d);m.el=d;m.cv=d.querySelector('canvas');m.ctx=m.cv.getContext('2d');return d;});
+const WIN=INFO['char-curtain']; let winCur='';
+
+// ────────────────────────────────────────── the hand ──────────────────────────────────────────
+// one continuous path through the whole film; sims read the same spline so cause and effect agree
+const SEND={x:580+760-24-22, y:456+168-20-22};            // centre of the send button
+const M=MINIS; const mc=(m,fx,fy)=>({x:m.x+fx*460,y:m.y+fy*270});
+const HAND=[
+  {t:3.90,x:1750,y:1160},{t:4.30,x:SEND.x+2,y:SEND.y+2},{t:4.75,x:SEND.x+2,y:SEND.y+2},{t:5.30,x:1560,y:980},{t:9.40,x:1500,y:1000},
+  // magnetic: approach from below-right, sit on the button, click at 10.05
+  {t:9.70,...mc(M[0],.92,1.10)},{t:10.02,...mc(M[0],.56,.60)},{t:10.05,...mc(M[0],.5,.58)},{t:10.28,...mc(M[0],.5,.58)},
+  // spring follow: a lazy figure inside the second card
+  {t:10.32,...mc(M[1],.18,.62)},{t:10.50,...mc(M[1],.80,.36)},{t:10.66,...mc(M[1],.30,.80)},{t:10.82,...mc(M[1],.72,.50)},{t:10.92,...mc(M[1],.55,.55)},
+  // jelly: one fast flick straight through the disc
+  {t:11.00,...mc(M[2],.10,.62)},{t:11.13,...mc(M[2],.90,.48)},{t:11.40,...mc(M[2],1.02,.40)},
+  // verlet: sweep through the hanging string and back
+  {t:11.58,...mc(M[3],.12,.60)},{t:11.74,...mc(M[3],.88,.56)},{t:11.90,...mc(M[3],.40,.66)},{t:12.15,...mc(M[3],.45,1.3)},
+  {t:12.40,x:1200,y:1250},
+];
+const hand=t=>spline(HAND,t);
+const CLICKS=[CLICK,10.05];
+
+// ────────────────────────────────────────── live sims (deterministic, precomputed at 240 Hz by OM.sim) ──────────────────────────────────────────
+// magnetic button · spring-follow dot · jelly disc · verlet string — all driven by the same hand spline
+function simulate(){ const [mg,fl,jl,vl]=M; mg.sim=OM.sim.magnet(mg,hand); fl.sim=OM.sim.follow(fl,hand); jl.sim=OM.sim.jelly(jl,hand); vl.sim=OM.sim.verlet(vl,hand); }
+
+// ────────────────────────────────────────── drawing the minis ──────────────────────────────────────────
+function drawMini(m,t){
+  const c=m.ctx; c.setTransform(2,0,0,2,0,0); c.clearRect(0,0,460,270);
+  const ink='#161616', green='#17a05e';
+  if(m.kind==='magnet'){ const [x,y]=m.sim.at(t); const B=m.sim.B; const p=OM.press(t,CLICKS[1],{depth:0.10,flash:0.35}); const sq=p.sq;
+    c.save(); c.translate(B.x+x,B.y+y); c.scale(1+sq,1-sq*1.4);
+    c.fillStyle=p.active?green:ink; roundRect(c,-92,-30,184,60,30); c.fill();
+    c.fillStyle='#fff'; c.font='500 21px Sans'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(p.down?'Added':'Add to cart',0,1); c.restore(); }
+  if(m.kind==='follow'){ const [x,y,vx,vy]=m.sim.at(t); const q=OM.squash(vx,vy);
+    c.save(); c.translate(x,y); c.rotate(q.ang); c.scale(q.sx,q.sy); c.fillStyle='#2f6fb5'; c.beginPath(); c.arc(0,0,26,0,Math.PI*2); c.fill(); c.restore();
+    // faint target ring where the hand is, so the lag reads
+    const h=hand(t); if(h[0]>m.x&&h[0]<m.x+460&&h[1]>m.y&&h[1]<m.y+270){ c.strokeStyle='#d0d0cb'; c.lineWidth=1.5; c.beginPath(); c.arc(h[0]-m.x,h[1]-m.y,10,0,Math.PI*2); c.stroke(); } }
+  if(m.kind==='jelly'){ const r=m.sim.at(t); const {N,R0,C}=m.sim; const pts=[]; for(let i=0;i<N;i++){const th=i/N*Math.PI*2; pts.push([C.x+Math.cos(th)*R0*(1+r[i]),C.y+Math.sin(th)*R0*(1+r[i])]);}
+    c.fillStyle='#f6c9ab'; c.beginPath(); c.moveTo(pts[0][0],pts[0][1]); for(let i=0;i<N;i++){const p0=pts[(i+N-1)%N],p1=pts[i],p2=pts[(i+1)%N],p3=pts[(i+2)%N]; c.bezierCurveTo(p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6,p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6,p2[0],p2[1]);} c.closePath(); c.fill(); }
+  if(m.kind==='verlet'){ const s=m.sim.at(t), N=m.sim.N; c.strokeStyle=ink; c.lineWidth=2.5; c.lineCap='round'; c.beginPath(); c.moveTo(s[0],s[1]); for(let i=1;i<N;i++) c.lineTo(s[i*2],s[i*2+1]); c.stroke();
+    c.fillStyle=ink; for(let i=0;i<N;i++){ c.beginPath(); c.arc(s[i*2],s[i*2+1],i===N-1?7:3.2,0,Math.PI*2); c.fill(); } }
+}
+function roundRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+// ────────────────────────────────────────── seek ──────────────────────────────────────────
+function place(el,x,y,s=1,op=1,blur=0,extra=''){ el.style.opacity=op; el.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(4)}) ${extra}`; el.style.filter=blur>0.2?`blur(${blur.toFixed(1)}px)`:'none'; }
+let markW=0, tagW=0;
+function seek(t){
+  const pending=[];
+  // 1 · words
+  const w1=$('w1'); const out1=sstep(W1_OUT,W1_OUT+0.22,t); w1.style.opacity=1-out1; w1.style.transform=`translateY(${(-out1*40).toFixed(1)}px)`;
+  [...w1.children].forEach((s,i)=>{ const w=OM.wordRise(t,W1[i]); s.style.opacity=w.op; s.style.transform=`translateY(${w.y.toFixed(1)}px) scale(${w.s.toFixed(4)})`; });
+  // 2 · wordmark types in, tag pops, confetti; then it shrinks to the top-left and stays as the header
+  const up=ssstep(MARK_UP,MARK_UP+0.55,t);
+  const mx=lerp(960-markW/2, 72, up), my=lerp(400, 44, up), ms=lerp(1,0.34,up);
+  const markVis = t>=MARK_IN && t<END_T;
+  place(markEl,mx,my,ms,markVis?1:0,0); markEl.style.transformOrigin='0 0';
+  MARKL.forEach((s,i)=>{ const d=OM.letterDrop(t,MARK_IN,i);
+    const sq=d.sq*(up<1?1:0);        // moving fast = flattened; it recovers as the spring settles
+    s.style.opacity=d.op; s.style.transform=`translateY(${d.y.toFixed(1)}px) scale(${(1+sq*0.6).toFixed(4)},${(1-sq).toFixed(4)})`; });
+  const tg=OM.wordRise(t,TAG_IN,{zeta:0.55,omega:20,dist:18}); const tagOp = t<MARK_UP ? tg.op : 1-ssstep(MARK_UP,MARK_UP+0.3,t);
+  place($('tag'),960-tagW/2,548+tg.y,1,tagOp);
+  { const w=OM.impact(t,TAG_IN+0.12,{decay:7,omega:22,sqx:0.16,sqy:0.20}); $('mv').style.transform=`scale(${w.sx.toFixed(4)},${w.sy.toFixed(4)})`; }
+  // 3 · prompt card: type, then the hand clicks send
+  { const el=$('prompt'); const ei=OM.popIn(t,PROMPT_IN), eo=OM.liftOut(t,PROMPT_OUT); const vis=t>=PROMPT_IN-0.05&&t<PROMPT_OUT+0.3;
+    place(el,0,ei.dy+eo.dy,ei.s*eo.s,vis?ei.op*eo.op:0,eo.blur);
+    const ty=OM.typeOn(t,TYPE0,PROMPT_TEXT,{cps:TYPE_CPS}); $('ptxt').textContent=ty.str;
+    $('caret').style.opacity = ty.caret;
+    const p=OM.press(t,CLICK); $('send').style.transform=`scale(${p.s.toFixed(3)})`; $('send').style.background = p.active?'var(--green)':'var(--ink)'; }
+  // 4 · build panel: lines check off one by one
+  { const el=$('panel'); const ei=OM.popIn(t,PANEL_IN), eo=OM.liftOut(t,PANEL_OUT); const vis=t>=PANEL_IN-0.05&&t<PANEL_OUT+0.3;
+    place(el,0,ei.dy+eo.dy,ei.s*eo.s,vis?ei.op*eo.op:0,eo.blur);
+    lineEls.forEach((ln,i)=>{ const tk=OM.tick(t,LINE0+i*LINE_DT); ln.classList.toggle('on',tk.on); ln.querySelector('.bx').style.transform=`scale(${tk.s})`;
+      const reveal=sstep(PANEL_IN+0.05+i*0.05,PANEL_IN+0.25+i*0.05,t); ln.style.opacity=reveal; }); }
+  // 5 · three pages fly through, tilted, blurred on the way in and out
+  SCREENS.forEach((s,i)=>{ const fly=OM.flyThrough(t,s.t,SCREEN_HOLD); if(!fly.visible){ s.el.style.opacity=0; return; }
+    s.el.style.opacity=fly.op; s.el.style.filter=fly.blur>0.3?`blur(${fly.blur.toFixed(1)}px)`:'none';
+    s.el.style.transform=`translate(${fly.x.toFixed(1)}px,0px) perspective(2200px) rotateY(${fly.rotY.toFixed(2)}deg) rotateX(${fly.rotX}deg) scale(${fly.s.toFixed(4)})`;
+    const f=clamp(s.mark-8+Math.round((t-s.t)*FPS),0,s.n-1); const src=`${FR}${s.name}/${String(f+1).padStart(4,'0')}.jpg`;
+    if(s.cur!==src){ s.cur=src; s.img.src=src; pending.push(s.img.decode().catch(()=>{})); } });
+  // 6 · micro-interaction cards
+  MINIS.forEach(m=>{ const vis=t>=m.t-0.02&&t<m.out+0.3; if(!vis){ m.el.style.opacity=0; return; } const ei=OM.popIn(t,m.t), eo=OM.liftOut(t,m.out);
+    place(m.el,0,ei.dy+eo.dy,ei.s*eo.s*1.12,ei.op*eo.op,eo.blur); drawMini(m,clamp(t,m.t,m.out+0.29)); });
+  // 7 · hold beat: the cloth page in a browser window, slow push in, hard out
+  { const el=$('win'); const vis=t>=WIN_IN&&t<WIN_OUT; const w=OM.popIn(t,WIN_IN,{zeta:0.7,omega:16,rise:40,s0:0.96,ds:0.04});
+    place(el,0,w.dy,w.s*OM.drift(t,WIN_IN,WIN_OUT,0.07),vis?w.op:0);
+    if(vis){ const f=clamp(WIN.mark-4+Math.round((t-WIN_IN)*FPS),0,WIN.n-1); const src=`${FR}char-curtain/${String(f+1).padStart(4,'0')}.jpg`; if(winCur!==src){winCur=src;$('winimg').src=src;pending.push($('winimg').decode().catch(()=>{}));} } }
+  // 8 · staccato words, then black + wordmark
+  { const w=OM.staccato(t,STAC).word; const on=t>=STAC[0][0]&&t<STAC_END; $('stac').textContent=w; $('stac').style.opacity=on?1:0;
+    $('end').style.opacity = t>=END_T?1:0; }
+  // hand
+  { const vis=t>=3.9&&t<12.3; const cu=OM.cursor(t,HAND,CLICKS);
+    $('cursor').style.opacity=vis?1:0; $('cursor').style.transform=`translate(${(cu.x-4).toFixed(1)}px,${(cu.y-3).toFixed(1)}px) scale(${cu.s})`; }
+  $('hud').textContent='t='+t.toFixed(3);
+  return Promise.all(pending);
+}
+window.__seek=async t=>{ await seek(t); return true; };
+window.__ready=document.fonts.ready.then(()=>{ markEl.style.transform='none'; markW=markEl.getBoundingClientRect().width; tagW=$('tag').getBoundingClientRect().width; simulate(); return seek(0); });
+const q=new URLSearchParams(location.search);
+if(q.has('t')) __ready.then(()=>seek(parseFloat(q.get('t'))));
+if(q.has('hud')) $('hud').style.display='block';
+if(q.has('play')) __ready.then(()=>{const t0=performance.now();(function loop(){seek(((performance.now()-t0)/1000)%DUR);requestAnimationFrame(loop);})();});
+</script>
+</body>
+</html>

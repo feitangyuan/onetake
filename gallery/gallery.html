@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>onetake · gallery</title>
+<style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#f8f8f6;font-family:Inter,system-ui,-apple-system,sans-serif}
+canvas{position:absolute;left:0;top:0}
+#dom{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden}
+#cap{position:absolute;left:48px;top:36px;font:22px ui-monospace,Menlo,monospace;color:#8f8f8b;white-space:nowrap}
+#cap b{color:#161616;font-weight:600}
+#index{position:absolute;inset:0;padding:60px 80px;font:20px/1.7 ui-monospace,Menlo,monospace;color:#161616;overflow:auto;display:none;background:#f8f8f6}
+#index a{color:#161616}
+#index h2{font:600 22px Inter,system-ui,sans-serif;margin:28px 0 6px}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="dom"></div>
+<div id="cap"></div>
+<div id="index"></div>
+<script src="../lib/motion.js"></script>
+<script>
+// onetake gallery — one demo per move in lib/motion.js.
+//   ?demo=<name>          the demo, same contract as a composition (window.__seek / __track / __meta)
+//   ?demo=<name>&play     loop it in real time        ?demo=<name>&t=0.8   pin a frame        (no query) the list
+// scripts/gallery.py turns each demo into gallery/sheets/<name>.png. The demos are plain on purpose — grey ground,
+// stand-in cards, a round subject — so a sheet shows the motion, not a style.
+const c = document.getElementById('c'), g = c.getContext('2d'), dom = document.getElementById('dom'), W = 1920, H = 1080;
+const C = { bg: '#f8f8f6', ink: '#161616', grey: '#8f8f8b', line: '#e8e8e4', green: '#17a05e', red: '#b42323', blue: '#2f6fb5', peach: '#f6c9ab', sun: '#f5d984', lilac: '#ded2ed', mint: '#c9dfcf', white: '#ffffff' };
+const SANS = 'Inter,system-ui,-apple-system,sans-serif';
+const { clamp, lerp, ease } = OM;
+
+// ─────────────── drawing helpers (canvas; each multiplies the current globalAlpha) ───────────────
+function clear(color = C.bg) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.filter = 'none'; g.fillStyle = color; g.fillRect(0, 0, W, H); }
+function rr(x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+function card(x, y, w, h, { r = 18, fill = C.white, shadow = 1 } = {}) {
+  g.save(); if (shadow > 0) { g.shadowColor = `rgba(20,20,20,${0.16 * shadow})`; g.shadowBlur = 44; g.shadowOffsetY = 18; }
+  rr(x, y, w, h, r); g.fillStyle = fill; g.fill(); g.restore();
+  g.save(); rr(x, y, w, h, r); g.strokeStyle = C.line; g.lineWidth = 1.5; g.stroke(); g.restore();
+}
+function text(s, x, y, { size = 64, weight = 500, color = C.ink, align = 'center', base = 'middle', font = SANS } = {}) {
+  g.save(); g.fillStyle = color; g.font = `${weight} ${size}px ${font}`; g.textAlign = align; g.textBaseline = base; g.fillText(s, x, y); g.restore();
+}
+function bars(x, y, w, n, { gap = 30, h = 12, color = C.line } = {}) { for (let i = 0; i < n; i++) { rr(x, y + i * gap, w * (i % 3 === 2 ? 0.6 : 1), h, h / 2); g.fillStyle = color; g.fill(); } }
+function subject(x, y, r, { color = C.sun, sx = 1, sy = 1, rot = 0 } = {}) {
+  g.save(); g.translate(x, y); g.rotate(rot); g.scale(sx, sy); g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fillStyle = color; g.fill();
+  g.beginPath(); g.arc(-r * 0.3, -r * 0.12, r * 0.08, 0, Math.PI * 2); g.arc(r * 0.3, -r * 0.12, r * 0.08, 0, Math.PI * 2); g.fillStyle = C.ink; g.fill(); g.restore();
+}
+function pointer(x, y, s = 1) {
+  g.save(); g.translate(x, y); g.scale(s, s); g.beginPath(); g.moveTo(0, 0); g.lineTo(27, 20); g.lineTo(15, 22); g.lineTo(23, 38); g.lineTo(17, 41); g.lineTo(9, 25); g.lineTo(0, 34); g.closePath();
+  g.fillStyle = C.ink; g.fill(); g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke(); g.restore();
+}
+function windowFrame(x, y, w, h, { tint = C.lilac } = {}) {
+  card(x, y, w, h, { r: 16 }); g.save(); rr(x, y, w, 44, [16, 16, 0, 0]); g.fillStyle = '#f1f1ee'; g.fill();
+  for (let i = 0; i < 3; i++) { g.beginPath(); g.arc(x + 24 + i * 20, y + 22, 6, 0, Math.PI * 2); g.fillStyle = '#d9d9d4'; g.fill(); }
+  bars(x + 44, y + 84, w * 0.45, 2, { gap: 34, h: 14 }); rr(x + 44, y + 170, w - 88, h - 214, 12); g.fillStyle = tint; g.fill(); g.restore();
+}
+const apply = (m, x, y) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+function glyphs(s, size, weight, font) { g.save(); g.font = `${weight} ${size}px ${font}`; let x = 960 - g.measureText(s).width / 2; const out = [...s].map(ch => { const w = g.measureText(ch).width, cx = x + w / 2; x += w; return [ch, cx]; }); g.restore(); return out; }
+
+const DEMOS = {
+  // ─────────────── enter ───────────────
+  wordRise: { group: 'enter', from: 'motion-web', note: 'a word lands: spring rise + scale; opacity leads the spring so it never reads as a fade', dur: 1.8,
+    words: [['Motion', 620, 0.15, C.ink], ['is the', 960, 0.5, C.ink], ['material.', 1330, 0.92, C.red]],
+    draw(t) { clear(); for (const [s, x, t0, col] of this.words) { const w = OM.wordRise(t, t0, { dist: 40 }); g.save(); g.globalAlpha = w.op; g.translate(x, 560 + w.y); g.scale(w.s, w.s); text(s, 0, 0, { size: 104, color: col }); g.restore(); } },
+    track(t) { const o = {}; for (const [s, x, t0] of this.words) o[s] = [x, 560 + OM.wordRise(t, t0, { dist: 40 }).y]; return o; } },
+
+  letterDrop: { group: 'enter', from: 'motion-web', note: 'wordmark letters drop in; speed flattens each one, the spring restores it', dur: 1.6,
+    setup() { this.gl = glyphs('onetake', 190, 400, 'Georgia,serif'); },
+    draw(t) { clear(); this.gl.forEach(([ch, cx], i) => { const d = OM.letterDrop(t, 0.15, i, { dist: 70 }); g.save(); g.globalAlpha = d.op; g.translate(cx, 640 + d.y); g.scale(d.sx, d.sy); text(ch, 0, 0, { size: 190, weight: 400, font: 'Georgia,serif', base: 'alphabetic' }); g.restore(); }); },
+    track(t) { return { o: [this.gl[0][1], 640 + OM.letterDrop(t, 0.15, 0, { dist: 70 }).y], t: [this.gl[5][1], 640 + OM.letterDrop(t, 0.15, 5, { dist: 70 }).y] }; } },
+
+  popIn: { group: 'enter', from: 'motion-web', note: 'popIn: a card springs up · liftOut: it lifts, grows a touch and blurs away', dur: 2.0,
+    draw(t) { clear(); const ei = OM.popIn(t, 0.2), eo = OM.liftOut(t, 1.35), op = ei.op * eo.op; if (op <= 0.001) return;
+      g.save(); g.globalAlpha = op; g.filter = eo.blur > 0.2 ? `blur(${eo.blur.toFixed(1)}px)` : 'none'; g.translate(960, 540 + ei.dy + eo.dy); g.scale(ei.s * eo.s, ei.s * eo.s);
+      card(-400, -120, 800, 240); text('make the hero feel alive', -350, -40, { size: 38, align: 'left' }); bars(-350, 20, 500, 2, { gap: 36, h: 14 }); g.restore(); },
+    track(t) { const ei = OM.popIn(t, 0.2), eo = OM.liftOut(t, 1.35); return { card: { x: 960, y: 540 + ei.dy + eo.dy, w: 800 * ei.s * eo.s, h: 240 * ei.s * eo.s } }; } },
+
+  maskRise: { group: 'enter', from: 'pocket-weather', note: 'lines rise into place from behind a clip mask, staggered', dur: 1.6,
+    lines: ['Pocket', 'Weather', 'Club.'],
+    draw(t) { clear(); this.lines.forEach((s, i) => { const m = OM.maskRise(t, 0.2, i, { dist: 170 }); g.save(); g.beginPath(); g.rect(520, 250 + i * 170, 900, 170); g.clip(); text(s, 560, 340 + i * 170 + m.y, { size: 150, weight: 650, align: 'left' }); g.restore(); }); },
+    track(t) { const o = {}; this.lines.forEach((s, i) => { o[s] = [760, 340 + i * 170 + OM.maskRise(t, 0.2, i, { dist: 170 }).y]; }); return o; } },
+
+  typeOn: { group: 'enter', from: 'motion-web', note: 'the prompt types at a steady cps; caret solid while typing, blinking after', dur: 2.0,
+    str: 'make the hero feel alive — springs, not fades',
+    caretX(n) { g.save(); g.font = `500 36px ${SANS}`; const w = g.measureText(this.str.slice(0, n)).width; g.restore(); return 522 + w; },
+    draw(t) { clear(); card(480, 430, 960, 200); const ty = OM.typeOn(t, 0.2, this.str, { cps: 38 }); text(ty.str, 520, 490, { size: 36, align: 'left' });
+      if (ty.caret) { g.fillStyle = C.ink; g.fillRect(this.caretX(ty.n), 470, 3, 40); } rr(1360, 560, 52, 52, 26); g.fillStyle = C.ink; g.fill(); },
+    track(t) { return { caret: [this.caretX(OM.typeOn(t, 0.2, this.str, { cps: 38 }).n), 490] }; } },
+
+  tick: { group: 'enter', from: 'motion-web', note: 'checklist lines tick one by one; each box pops from .8; the last line is the proof', dur: 2.2,
+    items: ['Read handfeel.md', 'Spring k=90 · damp .86', 'Jelly wobble along the leap', 'Reduced-motion fallback', 'verify → PASS'],
+    draw(t) { clear(); card(560, 250, 800, 110 + this.items.length * 64);
+      this.items.forEach((s, i) => { const tk = OM.tick(t, 0.35 + i * 0.24), y = 330 + i * 64; g.save(); g.translate(610, y); g.scale(tk.s, tk.s); rr(-14, -14, 28, 28, 8);
+        if (tk.on) { g.fillStyle = C.green; g.fill(); g.beginPath(); g.moveTo(-7, 0); g.lineTo(-2, 6); g.lineTo(8, -6); g.strokeStyle = '#fff'; g.lineWidth = 3; g.stroke(); } else { g.strokeStyle = '#cfcfca'; g.lineWidth = 2; g.stroke(); }
+        g.restore(); text(s, 650, y, { size: 30, align: 'left', color: tk.on && i < this.items.length - 1 ? C.grey : C.ink }); }); },
+    track(t) { const o = {}; this.items.forEach((s, i) => { const k = OM.tick(t, 0.35 + i * 0.24).s; o['box' + i] = { x: 610, y: 330 + i * 64, w: 28 * k, h: 28 * k }; }); return o; } },
+
+  flyThrough: { group: 'enter', from: 'motion-web', note: 'a screen flies in tilted, holds, flies out (CSS 3D). Its blur is a filter; render with --shutter for the real smear', dur: 1.6, shots: [0.22, 0.3, 0.6, 1.12, 1.18, 1.24],
+    setup() { dom.innerHTML = `<div id="fw" style="position:absolute;left:460px;top:228px;width:1000px;height:625px;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 40px 90px -30px rgba(20,20,20,.35),0 0 0 1px rgba(0,0,0,.05);transform-origin:50% 50%"><div style="height:44px;background:#f1f1ee"></div><div style="margin:36px 44px;height:22px;width:45%;background:#e8e8e4;border-radius:11px"></div><div style="margin:0 44px;height:430px;background:${C.lilac};border-radius:12px"></div></div>`; this.el = document.getElementById('fw'); },
+    draw(t) { clear(); const f = OM.flyThrough(t, 0.2, 0.9), el = this.el; el.style.opacity = f.visible ? f.op : 0; el.style.filter = f.blur > 0.3 ? `blur(${f.blur.toFixed(1)}px)` : 'none';
+      el.style.transform = `translate(${f.x.toFixed(1)}px,0px) perspective(2200px) rotateY(${f.rotY.toFixed(2)}deg) rotateX(${f.rotX}deg) scale(${f.s.toFixed(4)})`; },
+    track(t) { const f = OM.flyThrough(t, 0.2, 0.9); return { screen: { x: 960 + f.x, y: 540, op: f.visible ? f.op : 0 } }; } },
+
+  // ─────────────── carry — the next shot grows out of this one ───────────────
+  morphRect: { group: 'carry', from: 'pocket-weather', note: 'container transform: the button the hand presses becomes the result window', dur: 2.2, shots: [0.3, 0.52, 0.58, 0.64, 0.72, 1.6],
+    A: { x: 1300, y: 860, w: 320, h: 88, r: 44 }, B: { x: 360, y: 170, w: 1200, h: 720, r: 18 },
+    hand: [{ t: 0, x: 1640, y: 1060 }, { t: 0.38, x: 1470, y: 912 }, { t: 0.6, x: 1470, y: 912 }, { t: 1.0, x: 1720, y: 1120 }],
+    draw(t) { clear(); const m = OM.morphRect(t, 0.55, 1.25, this.A, this.B, { curve: ease.expoOut }), p = OM.press(t, 0.45);
+      const s = m.k > 0 ? 1 : p.s, v = Math.round(lerp(22, 255, clamp(m.k * 2.5)));
+      g.save(); g.translate(m.cx, m.cy); g.scale(s, s); g.translate(-m.cx, -m.cy); g.shadowColor = `rgba(20,20,20,${0.1 + 0.1 * m.k})`; g.shadowBlur = 20 + 40 * m.k; g.shadowOffsetY = 8 + 14 * m.k;
+      rr(m.x, m.y, m.w, m.h, m.r); g.fillStyle = `rgb(${v},${v},${v})`; g.fill(); g.restore();
+      g.save(); g.globalAlpha = 1 - clamp(m.k * 5); text('Generate', m.cx, m.cy, { size: 34, weight: 600, color: '#fff' }); g.restore();
+      g.save(); g.globalAlpha = clamp((m.k - 0.55) / 0.45); bars(m.x + 60, m.y + 70, m.w * 0.4, 2, { gap: 40, h: 16 }); rr(m.x + 60, m.y + 170, m.w - 120, m.h - 230, 14); g.fillStyle = C.mint; g.fill(); g.restore();
+      const cu = OM.cursor(t, this.hand, [0.45]); pointer(cu.x, cu.y, cu.s); },
+    track(t) { const m = OM.morphRect(t, 0.55, 1.25, this.A, this.B, { curve: ease.expoOut }), cu = OM.cursor(t, this.hand, [0.45]); return { window: { x: m.cx, y: m.cy, w: m.w, h: m.h }, hand: [cu.x, cu.y] }; } },
+
+  iris: { group: 'carry', from: 'pocket-weather', note: 'a circular stage opens from the subject until it covers the frame; the subject grows into it', dur: 1.8, shots: [0.3, 0.39, 0.45, 0.53, 0.7, 1.5],
+    draw(t) { clear(); subject(700, 580, 90); text('Sunny', 700, 740, { size: 40, color: C.grey });
+      const ir = OM.iris(t, 0.35, 1.05, 700, 580, { curve: ease.expoOut }); if (ir.r <= 0) return;
+      g.save(); g.beginPath(); g.arc(ir.cx, ir.cy, ir.r, 0, Math.PI * 2); g.clip(); g.fillStyle = C.sun; g.fillRect(0, 0, W, H);
+      subject(lerp(700, 960, ir.k), lerp(580, 520, ir.k), lerp(90, 250, ir.k), { color: '#fff4c8' });
+      g.globalAlpha = clamp((ir.k - 0.7) / 0.3); text('A little brighter.', 960, 880, { size: 72, weight: 600 }); g.restore(); },
+    track(t) { const ir = OM.iris(t, 0.35, 1.05, 700, 580, { curve: ease.expoOut }), r = lerp(90, 250, ir.k);
+      return { stage: { x: 700, y: 580, w: 2 * ir.r, h: 2 * ir.r }, subject: { x: lerp(700, 960, ir.k), y: lerp(580, 520, ir.k), w: 2 * r, h: 2 * r } }; } },
+
+  zoomThrough: { group: 'carry', from: 'library', note: 'the camera pushes into one card until its inside is the next scene (log-space zoom, expo in-out)', dur: 2.4, shots: [0.3, 0.8, 0.9, 0.95, 1.02, 1.9],
+    tg: { x: 768, y: 570, w: 384, h: 216 },
+    draw(t) { clear(); const z = OM.zoomThrough(t, 0.45, 1.45, this.tg); g.setTransform(...z.matrix);
+      for (let row = 0; row < 2; row++) for (let col = 0; col < 3; col++) { const x = 324 + col * 444, y = 294 + row * 276, hit = col === 1 && row === 1;
+        card(x, y, 384, 216, { r: 14, fill: hit ? C.mint : C.white, shadow: 1 - z.k });
+        if (hit) { [60, 110, 80, 140, 100, 160, 120].forEach((h, b) => { rr(x + 40 + b * 46, y + 186 - h, 28, h, 5); g.fillStyle = 'rgba(22,22,22,.78)'; g.fill(); }); }
+        else bars(x + 28, y + 36, 200, 3, { gap: 30, h: 12 }); }
+      g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = clamp((z.k - 0.9) / 0.1); text('Weekly focus', 960, 120, { size: 60, weight: 600 }); g.globalAlpha = 1; },
+    track(t) { const z = OM.zoomThrough(t, 0.45, 1.45, this.tg), tg = this.tg; return { card: { x: (tg.x + tg.w / 2) * z.s + z.tx, y: (tg.y + tg.h / 2) * z.s + z.ty, w: tg.w * z.s, h: tg.h * z.s } }; } },
+
+  hop: { group: 'carry', from: 'pocket-weather', note: 'the subject hops to its next slot on an arc and lands with a ring', dur: 1.6,
+    draw(t) { clear(); for (const x of [560, 1360]) { g.beginPath(); g.ellipse(x, 705, 110, 18, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(20,20,20,.08)'; g.fill(); }
+      const h = OM.hop(t, 0.3, 1.0, { x: 560, y: 600 }, { x: 1360, y: 600 }, { height: 260 }), im = OM.impact(t, 1.0);
+      subject(h.x, h.y + (1 - im.sy) * 100, 100, { sx: im.sx, sy: im.sy }); },
+    track(t) { const h = OM.hop(t, 0.3, 1.0, { x: 560, y: 600 }, { x: 1360, y: 600 }, { height: 260 }); return { subject: [h.x, h.y] }; } },
+
+  gather: { group: 'carry', from: 'pocket-weather', note: 'the cast travels on arcs into a cluster, fanning by index, staggered', dur: 1.8,
+    a: [{ x: 520, y: 560 }, { x: 960, y: 560 }, { x: 1400, y: 560 }], b: [{ x: 850, y: 600 }, { x: 960, y: 520 }, { x: 1070, y: 600 }], cols: [C.sun, C.lilac, C.mint],
+    q(t, i) { return OM.gather(t, 0.3, 1.1, i, 3, this.a[i], this.b[i], { arc: 170, spin: 0.35 }); },
+    draw(t) { clear(); for (let i = 0; i < 3; i++) { const q = this.q(t, i); subject(q.x, q.y, lerp(110, 80, q.k), { color: this.cols[i], rot: q.rot }); } },
+    track(t) { const o = {}; for (let i = 0; i < 3; i++) { const q = this.q(t, i); o['s' + i] = [q.x, q.y]; } return o; } },
+
+  ribbon: { group: 'carry', from: 'pocket-weather', note: 'an elastic rail: the hand pulls, the panel switches with a ring-out, the words lag behind', dur: 2.6,
+    sw: [0.55, 1.5], cols: [C.sun, C.lilac, C.mint], words: ['Make room', 'Slow down', 'Start fresh'],
+    hx(t) { const d = (a, b) => OM.tween(t, a, b, ease.cubicInOut); return t < 0.6 ? lerp(1500, 1080, d(0.2, 0.55)) : t < 1.1 ? lerp(1080, 1500, d(0.65, 1.05)) : t < 1.55 ? lerp(1500, 1080, d(1.15, 1.5)) : lerp(1080, 1500, d(1.6, 2.0)); },
+    draw(t) { clear(); const rb = OM.ribbon(t, this.sw);
+      for (let j = 0; j < 3; j++) { const x = 960 + (j - rb.shift) * 1280 + rb.wobble; if (x < -700 || x > W + 700) continue;
+        g.save(); g.translate(x, 470); g.rotate(rb.rot * 0.4); g.scale(rb.sx, rb.sy); rr(-500, -290, 1000, 580, 40); g.fillStyle = this.cols[j]; g.fill(); subject(0, 10, 140, { color: '#fffaf0' }); g.restore();
+        text(this.words[j], x + rb.textDx, 900, { size: 76, weight: 600 }); }
+      const pressed = (t > 0.22 && t < 0.56) || (t > 1.17 && t < 1.51); pointer(this.hx(t), 640, pressed ? 0.84 : 1); },
+    track(t) { const rb = OM.ribbon(t, this.sw), x = 960 + (1 - rb.shift) * 1280 + rb.wobble; return { panel: [x, 470], words: [x + rb.textDx, 900], hand: [this.hx(t), 640] }; } },
+
+  seal: { group: 'carry', from: 'pocket-weather', note: 'lockup: the cast folds into a turning seal while the name rises from its mask', dur: 2.2,
+    cols: [C.sun, C.lilac, C.mint],
+    draw(t) { clear(); const sl = OM.seal(t, 0.2, 1.1, { r: 230 }), cx = 1330, cy = 540;
+      g.save(); g.translate(cx, cy); g.rotate(sl.rot); g.beginPath(); g.arc(0, 0, sl.r, 0, Math.PI * 2); g.fillStyle = C.sun; g.fill();
+      for (let k = 0; k < 12; k++) { g.rotate(Math.PI / 6); g.beginPath(); g.arc(sl.r * 0.82, 0, 6 * sl.k, 0, Math.PI * 2); g.fillStyle = 'rgba(22,22,22,.35)'; g.fill(); } g.restore();
+      for (let i = 0; i < 3; i++) { const q = OM.gather(t, 0.2, 1.1, i, 3, { x: 520 + i * 440, y: 540 }, { x: cx + (i - 1) * 110, y: cy + (i === 1 ? -40 : 40) }, { arc: 140, spin: 0.4 }); subject(q.x, q.y, lerp(120, 64, q.k), { color: this.cols[i], rot: q.rot }); }
+      ['Pocket', 'Weather', 'Club.'].forEach((s, i) => { const m = OM.maskRise(t, 1.15, i, { dist: 150 }); g.save(); g.beginPath(); g.rect(170, 250 + i * 150, 820, 150); g.clip(); text(s, 200, 330 + i * 150 + m.y, { size: 130, weight: 650, align: 'left' }); g.restore(); }); },
+    track(t) { const sl = OM.seal(t, 0.2, 1.1, { r: 230 }); return { seal: { x: 1330, y: 540, w: 2 * sl.r, h: 2 * sl.r }, name: [480, 330 + OM.maskRise(t, 1.15, 0, { dist: 150 }).y] }; } },
+
+  staccato: { group: 'carry', from: 'motion-web', note: 'hard cuts in a burst: the one place a cut may replace everything', dur: 1.4,
+    list: [[0.2, 'MOTION'], [0.45, 'IS'], [0.67, 'THE'], [0.89, 'MATERIAL']], shots: [0.1, 0.3, 0.55, 0.75, 1.0, 1.3],
+    draw(t) { clear(); const w = OM.staccato(t, this.list); if (w.word) text(w.word, 960, 560, { size: 120, weight: 800 }); },
+    track() { return {}; } },
+
+  // ─────────────── contact — one thing causes another ───────────────
+  impactSplit: { group: 'contact', from: 'pocket-weather', note: 'the subject lands on the headline: glyphs split, bounce by distance, rejoin', dur: 2.2,
+    setup() { this.gl = glyphs('A little brighter.', 124, 600, SANS); },
+    pos(t) { const hit = 0.87; if (t < hit) { const h = OM.hop(t, 0, hit, { x: -200, y: 200 }, { x: 960, y: 560 }, { height: 260 }); return [h.x, h.y, 1, 1]; } const im = OM.impact(t, hit); return [960, 560 - Math.abs(im.r) * 90, im.sx, im.sy]; },
+    draw(t) { clear(); for (const [ch, cx] of this.gl) { const sp = OM.impactSplit(t, 0.87, cx, 960); g.save(); g.translate(cx + sp.dx, 700 + sp.dy); g.rotate(sp.rot); text(ch, 0, 0, { size: 124, weight: 600 }); g.restore(); }
+      const [x, y, sx, sy] = this.pos(t); subject(x, y, 110, { sx, sy }); },
+    track(t) { const [x, y] = this.pos(t), a = this.gl[0], b = this.gl[9], sa = OM.impactSplit(t, 0.87, a[1], 960), sb = OM.impactSplit(t, 0.87, b[1], 960);
+      return { subject: [x, y], A: [a[1] + sa.dx, 700 + sa.dy], b: [b[1] + sb.dx, 700 + sb.dy] }; } },
+
+  press: { group: 'contact', from: 'motion-web', note: 'the hand arrives and clicks; the button rings, flashes and changes state', dur: 1.6,
+    hand: [{ t: 0, x: 1500, y: 1000 }, { t: 0.55, x: 972, y: 552 }, { t: 1.0, x: 972, y: 552 }, { t: 1.5, x: 1260, y: 900 }],
+    draw(t) { clear(); card(660, 340, 600, 400); const p = OM.press(t, 0.7, { flash: 0.5 });
+      g.save(); g.translate(960, 540); g.scale(1 + p.sq, 1 - p.sq * 1.4); rr(-150, -40, 300, 80, 40); g.fillStyle = p.active ? C.green : C.ink; g.fill(); text(p.down ? 'Added' : 'Add to cart', 0, 2, { size: 30, weight: 600, color: '#fff' }); g.restore();
+      const cu = OM.cursor(t, this.hand, [0.7]); pointer(cu.x, cu.y, cu.s); },
+    track(t) { const cu = OM.cursor(t, this.hand, [0.7]), p = OM.press(t, 0.7); return { hand: [cu.x, cu.y], button: { x: 960, y: 540, w: 300 * (1 + p.sq), h: 80 * (1 - p.sq * 1.4) } }; } },
+
+  squash: { group: 'contact', from: 'motion-web', note: 'stretch along the direction of travel, thin across it: velocity in, scale out', dur: 2.2,
+    path: [{ t: 0, x: 420, y: 700 }, { t: 0.5, x: 900, y: 360 }, { t: 0.9, x: 1500, y: 640 }, { t: 1.4, x: 1000, y: 820 }, { t: 1.9, x: 560, y: 520 }, { t: 2.2, x: 620, y: 460 }],
+    draw(t) { clear(); const p = OM.spline(this.path, t), q = OM.spline(this.path, t - 1 / 120), s = OM.squash((p[0] - q[0]) * 120, (p[1] - q[1]) * 120);
+      g.save(); g.translate(p[0], p[1]); g.rotate(s.ang); g.scale(s.sx, s.sy); g.beginPath(); g.arc(0, 0, 60, 0, Math.PI * 2); g.fillStyle = C.blue; g.fill(); g.restore(); },
+    track(t) { const p = OM.spline(this.path, t); return { ball: [p[0], p[1]] }; } },
+
+  sims: { group: 'contact', from: 'motion-web', note: 'live mechanisms precomputed at 240 Hz — magnetic button, spring follow, jelly, verlet string — one hand drives all four', dur: 3.4,
+    shots: [0.3, 0.75, 1.3, 1.95, 2.6, 3.1],
+    setup() {
+      const cards = this.cards = [{ kind: 'magnet', x: 420, y: 190, t: 0, out: 3.1 }, { kind: 'follow', x: 1040, y: 190, t: 0, out: 3.1 }, { kind: 'jelly', x: 420, y: 600, t: 0, out: 3.1 }, { kind: 'verlet', x: 1040, y: 600, t: 0, out: 3.1 }];
+      const mc = (m, fx, fy) => ({ x: m.x + fx * 460, y: m.y + fy * 270 });
+      this.hand = [{ t: 0, x: 960, y: 1150 }, { t: 0.35, ...mc(cards[0], 0.9, 1.1) }, { t: 0.62, ...mc(cards[0], 0.52, 0.6) }, { t: 0.66, ...mc(cards[0], 0.5, 0.58) }, { t: 0.95, ...mc(cards[0], 0.5, 0.58) },
+        { t: 1.05, ...mc(cards[1], 0.18, 0.62) }, { t: 1.25, ...mc(cards[1], 0.8, 0.36) }, { t: 1.45, ...mc(cards[1], 0.3, 0.8) }, { t: 1.62, ...mc(cards[1], 0.6, 0.5) },
+        { t: 1.85, ...mc(cards[2], 0.08, 0.62) }, { t: 2.0, ...mc(cards[2], 0.92, 0.46) }, { t: 2.2, ...mc(cards[2], 1.05, 0.4) },
+        { t: 2.42, ...mc(cards[3], 0.12, 0.6) }, { t: 2.62, ...mc(cards[3], 0.88, 0.56) }, { t: 2.82, ...mc(cards[3], 0.4, 0.66) }, { t: 3.2, ...mc(cards[3], 0.45, 1.4) }];
+      const hand = t => OM.spline(this.hand, t);
+      for (const m of cards) m.sim = OM.sim[m.kind](m, hand);
+    },
+    draw(t) { clear(); const click = 0.66;
+      for (const m of this.cards) { card(m.x, m.y, 460, 270); text(m.kind, m.x + 22, m.y + 30, { size: 19, align: 'left', color: C.grey, font: 'ui-monospace,Menlo,monospace' });
+        g.save(); g.beginPath(); g.rect(m.x, m.y, 460, 270); g.clip(); g.translate(m.x, m.y);
+        if (m.kind === 'magnet') { const [x, y] = m.sim.at(t), B = m.sim.B, p = OM.press(t, click, { depth: 0.1, flash: 0.35 }); g.translate(B.x + x, B.y + y); g.scale(1 + p.sq, 1 - p.sq * 1.4); rr(-92, -30, 184, 60, 30); g.fillStyle = p.active ? C.green : C.ink; g.fill(); text(p.down ? 'Added' : 'Add to cart', 0, 1, { size: 21, color: '#fff' }); }
+        if (m.kind === 'follow') { const [x, y, vx, vy] = m.sim.at(t), q = OM.squash(vx, vy); g.translate(x, y); g.rotate(q.ang); g.scale(q.sx, q.sy); g.beginPath(); g.arc(0, 0, 26, 0, Math.PI * 2); g.fillStyle = C.blue; g.fill(); }
+        if (m.kind === 'jelly') { const r = m.sim.at(t), { N, R0, C: cc } = m.sim, pts = []; for (let i = 0; i < N; i++) { const th = i / N * Math.PI * 2; pts.push([cc.x + Math.cos(th) * R0 * (1 + r[i]), cc.y + Math.sin(th) * R0 * (1 + r[i])]); }
+          g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 0; i < N; i++) { const p0 = pts[(i + N - 1) % N], p1 = pts[i], p2 = pts[(i + 1) % N], p3 = pts[(i + 2) % N]; g.bezierCurveTo(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6, p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1]); }
+          g.closePath(); g.fillStyle = C.peach; g.fill(); }
+        if (m.kind === 'verlet') { const s = m.sim.at(t), N = m.sim.N; g.beginPath(); g.moveTo(s[0], s[1]); for (let i = 1; i < N; i++) g.lineTo(s[i * 2], s[i * 2 + 1]); g.strokeStyle = C.ink; g.lineWidth = 2.5; g.lineCap = 'round'; g.stroke();
+          g.fillStyle = C.ink; for (let i = 0; i < N; i++) { g.beginPath(); g.arc(s[i * 2], s[i * 2 + 1], i === N - 1 ? 7 : 3.2, 0, Math.PI * 2); g.fill(); } }
+        g.restore(); }
+      const cu = OM.cursor(t, this.hand, [click]); pointer(cu.x, cu.y, cu.s); },
+    track(t) { const cu = OM.cursor(t, this.hand, [0.66]), f = this.cards[1], [x, y] = f.sim.at(t); return { hand: [cu.x, cu.y], follow: [f.x + x, f.y + y] }; } },
+
+  // ─────────────── camera ───────────────
+  camera: { group: 'camera', from: 'library', note: 'one camera, three depths: the near layer moves most, the far least; depth of field from distance to focus', dur: 2.6,
+    keys: [{ t: 0.3, x: 960, y: 540, zoom: 1 }, { t: 2.1, x: 1150, y: 600, zoom: 1.5 }],
+    layer(t, depth, fn) { const cam = OM.camera(t, this.keys); g.save(); g.setTransform(...OM.view(cam, { depth })); g.filter = `blur(${OM.dof(depth, 0, { k: 5 }).toFixed(1)}px)`; fn(); g.restore(); },
+    draw(t) { clear();
+      this.layer(t, 1.5, () => { for (let i = 0; i < 7; i++) { g.beginPath(); g.arc(160 + i * 300, 300 + (i % 2) * 120, 110, 0, Math.PI * 2); g.fillStyle = [C.lilac, C.mint, C.sun][i % 3]; g.fill(); } });
+      this.layer(t, 0, () => windowFrame(560, 250, 800, 520, { tint: C.mint }));
+      this.layer(t, -0.35, () => { for (let i = 0; i < 4; i++) { card(380 + i * 380, 820 - (i % 2) * 60, 220, 80, { r: 40 }); text(['springs', 'carry', 'shutter', 'rest'][i], 490 + i * 380, 860 - (i % 2) * 60, { size: 30 }); } }); },
+    track(t) { const cam = OM.camera(t, this.keys);
+      return { far: apply(OM.view(cam, { depth: 1.5 }), 1060, 420), focus: apply(OM.view(cam, { depth: 0 }), 960, 510), near: apply(OM.view(cam, { depth: -0.35 }), 870, 860) }; } },
+
+  whip: { group: 'camera', from: 'library', note: 'a whip: 1920 px in .35 s on expo in-out; it only reads with render.py --shutter', dur: 1.6, shots: [0.4, 0.69, 0.72, 0.75, 0.8, 1.3],
+    draw(t) { clear(); const w = OM.whip(t, 0.55, 0.35, 1920); g.save(); g.translate(-w.d, 0);
+      windowFrame(460, 230, 1000, 620, { tint: C.lilac }); text('before', 960, 940, { size: 56, color: C.grey });
+      windowFrame(460 + 1920, 230, 1000, 620, { tint: C.sun }); text('after', 960 + 1920, 940, { size: 56, color: C.grey }); g.restore(); },
+    track(t) { return { world: [960 - OM.whip(t, 0.55, 0.35, 1920).d, 540] }; } },
+
+  shake: { group: 'camera', from: 'library', note: 'a word slams in and the frame shakes, decaying; deterministic and starting from zero', dur: 1.6,
+    k(t) { return OM.tween(t, 0.3, 0.45, ease.expoIn); },
+    draw(t) { clear(); const sh = OM.shake(t, 0.45, { amp: 16 }), k = this.k(t); g.save(); g.translate(960 + sh.x, 540 + sh.y); g.rotate(sh.rot);
+      g.globalAlpha = clamp(k * 3); g.scale(lerp(2.4, 1, k), lerp(2.4, 1, k)); text('SHIP IT', 0, 0, { size: 150, weight: 800 }); g.restore(); },
+    track(t) { const sh = OM.shake(t, 0.45, { amp: 16 }), s = lerp(2.4, 1, this.k(t)); return { word: { x: 960 + sh.x, y: 540 + sh.y, w: 620 * s, h: 150 * s } }; } },
+
+  drift: { group: 'camera', from: 'motion-web', note: 'the calm hold: one window, a slow push from 1.00 to 1.07 — the rest before the hits', dur: 2.4,
+    sc(t) { const w = OM.popIn(t, 0.1, { zeta: 0.7, omega: 16, rise: 40, s0: 0.96, ds: 0.04 }); return [w, w.s * OM.drift(t, 0.1, 2.3, 0.07)]; },
+    draw(t) { clear(); const [w, s] = this.sc(t); g.save(); g.globalAlpha = w.op; g.translate(960, 540 + w.dy); g.scale(s, s); windowFrame(-700, -420, 1400, 840, { tint: C.peach }); g.restore(); },
+    track(t) { const [w, s] = this.sc(t); return { window: { x: 960, y: 540 + w.dy, w: 1400 * s, h: 840 * s } }; } },
+
+  // ─────────────── fluid — from ebb ───────────────
+  swiftSpring: { group: 'fluid', from: 'ebb', note: "SwiftUI's named springs: .smooth, .snappy, .bouncy — Spring(duration, bounce) as ζ = 1 − b, ω = 2π/d", dur: 1.4,
+    draw(t) { clear(); ['smooth', 'snappy', 'bouncy'].forEach((k, i) => { const v = OM.swiftSpring(t - 0.15, k), x = 460 + v * 1000, y = 360 + i * 180;
+      g.fillStyle = '#e8e8e4'; g.fillRect(460, y - 2, 1000, 4); g.beginPath(); g.arc(x, y, 34, 0, 7); g.fillStyle = [C.ink, C.red, C.green][i] || C.ink; g.fill(); text('.' + k, 300, y, { size: 30, align: 'left' }); }); },
+    track(t) { const o = {}; ['smooth', 'snappy', 'bouncy'].forEach((k, i) => { o[k] = [460 + OM.swiftSpring(t - 0.15, k) * 1000, 360 + i * 180]; }); return o; } },
+
+  lightField: { group: 'fluid', from: 'ebb', note: 'a ground of light that is always there: it rises, floods the frame in ≤ 0.4 s, and drains — the same object moving, not a wipe', dur: 2.6,
+    level(t) { return t < 1.2 ? 0.5 * OM.ease.smooth(OM.seg(t, 0.1, 1.1)) : t < 1.6 ? OM.lerp(0.5, 1.05, OM.ease.expoOut(OM.seg(t, 1.2, 1.5))) : 1.05 * (1 - OM.ease.smoother(OM.seg(t, 1.6, 2.5))); },
+    draw(t) { clear(); g.fillStyle = '#fdfbf7'; g.fillRect(0, 0, 1920, 1080); const f = OM.lightField(this.level(t));
+      g.save(); g.translate(f.cx, f.cy); g.rotate(f.tilt); g.scale(f.rx / f.ry, 1); const gr = g.createRadialGradient(0, 0, 0, 0, 0, f.ry);
+      [[236, 104, 46, 1], [244, 150, 92, 1], [250, 204, 170, 1], [253, 236, 222, 0.75], [253, 236, 222, 0]].forEach((c, i) => gr.addColorStop(f.stops[i], `rgba(${c.join(',')})`));
+      g.fillStyle = gr; g.fillRect(-f.ry, -f.ry, 2 * f.ry, 2 * f.ry); g.restore(); },
+    track(t) { const f = OM.lightField(this.level(t)); return { horizon: [960, Math.max(0, f.horizon)] }; } },
+
+  ripple: { group: 'fluid', from: 'ebb', note: 'a flood drains as three rings leaving one point, alternating tints; the world shows through the innermost', dur: 2.0,
+    draw(t) { clear(); g.fillStyle = '#fdfbf7'; g.fillRect(0, 0, 1920, 1080); card(760, 330, 400, 420); const r = OM.ripple(t, 0.2).r, hole = R => { g.moveTo(960 + R, 540); g.arc(960, 540, Math.max(0.01, R), 0, 7, true); };
+      g.beginPath(); g.rect(0, 0, 1920, 1080); hole(r[0]); g.fillStyle = 'rgb(240,120,60)'; g.fill('evenodd');
+      g.beginPath(); g.arc(960, 540, r[0], 0, 7); hole(r[1]); g.fillStyle = 'rgb(248,196,158)'; g.fill('evenodd');
+      g.beginPath(); g.arc(960, 540, r[1], 0, 7); hole(r[2]); g.fillStyle = 'rgb(252,226,206)'; g.fill('evenodd'); },
+    track(t) { const r = OM.ripple(t, 0.2).r; return { ring0: { x: 960, y: 540, w: 2 * r[0], h: 2 * r[0] }, ring2: { x: 960, y: 540, w: 2 * r[2], h: 2 * r[2] } }; } },
+
+  silk: { group: 'fluid', from: 'ebb', note: 'domain-warped noise on a 16×20 grid, ramped through a dark fold, drawn up with a blur, one pale wisp', dur: 3.0,
+    setup() { this.c = document.createElement('canvas'); this.c.width = 16; this.c.height = 20; this.x = this.c.getContext('2d'); this.im = this.x.createImageData(16, 20); },
+    draw(t) { clear(); [['peach', 3, 360], ['ember', 24, 800], ['dusk', 61, 1240]].forEach(([r, seed, x]) => {
+      OM.silk(t * 1.5, seed, OM.silk.ramps[r], { out: this.im.data }); this.x.putImageData(this.im, 0, 0);
+      g.save(); g.beginPath(); g.roundRect(x, 250, 320, 406, 30); g.clip(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.filter = 'blur(26px)'; g.drawImage(this.c, x - 37, 213, 394, 480); g.restore();
+      text(r, x + 20, 700, { size: 26, align: 'left', color: C.grey }); }); },
+    track(t) { return { card: { x: 520, y: 453, w: 320, h: 406 } }; } },
+
+  carouselLoop: { group: 'fluid', from: 'ebb', note: 'a belt that never rests until told to: constant speed after a .smooth start; its clock slows every card with it', dur: 3.2,
+    setup() { this.B = OM.carouselLoop({ dur: 3.4, start: 0.2, speed: 420, stop: [2.3, 2.8] }); },
+    draw(t) { clear(); const b = this.B.at(t); for (let i = -2; i < 9; i++) { const x = ((i * 300 - b.x) % 3300 + 3300) % 3300 - 600; card(x, 400, 260, 300, { r: 26 });
+      g.fillStyle = [C.lilac, C.red, C.green][((i % 3) + 3) % 3]; g.globalAlpha = 0.35; g.fillRect(x + 20, 420 + 120 * (0.5 + 0.5 * Math.sin(b.tau * 3 + i)), 220, 16); g.globalAlpha = 1; } },
+    track(t) { const b = this.B.at(t); return { belt: [960 - (b.x % 300), 550] }; } },
+};
+
+const q = new URLSearchParams(location.search), name = q.get('demo');
+window.__demos = Object.entries(DEMOS).map(([n, d]) => ({ name: n, group: d.group, from: d.from, note: d.note, dur: d.dur, shots: d.shots || null }));
+if (!name || !DEMOS[name]) {
+  const idx = document.getElementById('index'), groups = {};
+  for (const d of window.__demos) (groups[d.group] = groups[d.group] || []).push(d);
+  idx.innerHTML = `<div style="font:600 30px ${SANS}">onetake · gallery</div>` + Object.entries(groups).map(([gn, ds]) => `<h2>${gn}</h2>` +
+    ds.map(d => `<div><a href="?demo=${d.name}&play">${d.name}</a> — ${d.note} <span style="color:#8f8f8b">(${d.from})</span></div>`).join('')).join('');
+  idx.style.display = 'block'; window.__meta = { dur: 0 }; window.__ready = Promise.resolve();
+} else {
+  const D = DEMOS[name];
+  document.getElementById('cap').innerHTML = `<b>OM.${name}</b> · ${D.group} · ${D.from}`;
+  window.__meta = { dur: D.dur, fps: 60, demo: name, group: D.group, from: D.from, note: D.note };
+  window.__seek = async t => { D.draw(t); return true; };
+  window.__track = t => (D.track ? D.track(t) : {});
+  window.__ready = document.fonts.ready.then(() => { if (D.setup) D.setup(); D.draw(0); });
+  if (q.has('t')) window.__ready.then(() => D.draw(parseFloat(q.get('t'))));
+  if (q.has('play')) window.__ready.then(() => { const t0 = performance.now(); (function loop() { D.draw(((performance.now() - t0) / 1000) % (D.dur + 0.6)); requestAnimationFrame(loop); })(); });
+}
+</script>
+</body>
+</html>

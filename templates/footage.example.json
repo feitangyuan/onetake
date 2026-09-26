@@ -1,0 +1,19 @@
+{
+  "_comment": "footage config used for motion-web-15s. Sweep points are in 1440×900 space (the design viewport of the cases) and scaled to the recording viewport.",
+  "viewport": [1920, 1200],
+  "coord_space": [1440, 900],
+  "settle_ms": 1500,
+  "preroll_ms": 1400,
+  "tail_ms": 2000,
+  "cases": [
+    {"name": "critter",      "url": "file:///path/to/your-page-1/index.html",
+     "drive": [{"sweep": [[720,450],[380,300],[1060,620],[520,260],[900,560],[720,450]], "dur": 3.2}]},
+    {"name": "demo-after",   "url": "file:///path/to/your-page-2/index.html",
+     "drive": [{"wheel": {"n": 1, "dy": 600, "gap_ms": 0}}, {"wait": 1500}, {"wheel": {"n": 1, "dy": 600, "gap_ms": 0}}]},
+    {"name": "press-stack",  "url": "https://example.com/a-scrolling-page",
+     "settle_ms": 2500,
+     "drive": [{"wheel": {"n": 10, "dy": 260, "gap_ms": 220}}]},
+    {"name": "char-curtain", "url": "https://example.com/a-hover-page",
+     "drive": [{"sweep": [[180,470],[1260,430],[300,520]], "dur": 2.6}]}
+  ]
+}
