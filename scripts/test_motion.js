@@ -1,5 +1,5 @@
-// onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 #!/usr/bin/env node
+// onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 // test_motion.js — the library's math, checked before any film leans on it.
 //
 //   node scripts/test_motion.js
