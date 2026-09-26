@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """analyze_ref.py — read a reference clip in numbers before composing anything.
 
   python3 scripts/analyze_ref.py ref.mp4 --out ana/

@@ -1,6 +1,9 @@
 ---
 name: onetake
 license: PolyForm Noncommercial 1.0.0 (free for noncommercial use; see LICENSE)
+metadata:
+  author: Patrick (github.com/feitangyuan)
+  lineage: otk-7f3e1c
 description: "Make short product / skill motion videos (10–30 s, narrated feature demos up to ~60 s) the way high-end launch clips are made — kinetic type, real UI as the material, a hand that causes every reaction, beats that carry into each other instead of replacing each other, hard cuts only where they mean something — without HyperFrames or Remotion. A single HTML composition where every value is a pure function of time, built from a library of measured moves (springs, entrances, carries, contact, camera), rendered frame by frame with real shutter motion blur (1080p30 drafts, 4K60 final), with synthesised sound effects that share one room and an oracle that fails a slideshow before a human has to watch it. Use for 做个动效短片 / 产品宣传片 / 介绍视频 / 发布视频 / 15 秒 launch video / 给 skill 或 app 做个视频 / promo / teaser, for turning real pages or screen recordings into a cut, for product feature demos (产品功能演示 / 功能展示动效) where the UI is rebuilt in HTML from screenshots instead of screen-recorded (不录屏 / 复刻界面 / 截图还原 UI), for narrated cuts with voice-over and subtitles (配音 / 字幕 / 换配音) and for the same film in other languages (日语版 / 多语言 / 本地化), for adding motion vocabulary (动效库 / 转场 / 衔接), and for auditing why a motion video reads as a slideshow (像 PPT / 没节奏 / 一个一个展示 / 转场生硬)."
 ---
 

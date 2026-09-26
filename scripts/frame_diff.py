@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """frame_diff.py — do two compositions draw the same frames? For a change that must leave one version untouched
 (a new language behind ?lang=, a refactor): freeze a copy of the accepted comp, then compare it with the working one.
 

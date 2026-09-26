@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """sfx_score.example.py — the motion-web-15s score, written on scripts/sfx_palette.py.
 
 Copy next to your comp, edit the events, run:  python3 sfx_score.py  → sfx.wav (48 kHz, peak -8 dBFS)

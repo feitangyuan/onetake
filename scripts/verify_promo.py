@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """verify_promo.py — does the cut have a rhythm, and does it carry? The checks that fail a slideshow before a human has to.
 
   python3 scripts/verify_promo.py film.mp4 --comp comp.html --ref ref.mp4 --shots 0,1.6,3.0,4.8,7.0,9.6,12.1,13.25,14.3

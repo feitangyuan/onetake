@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """sfx_palette.py — the sound materials, one shared room, and a Score helper.
 
     import sys; sys.path.insert(0, "<skill>/scripts"); from sfx_palette import *

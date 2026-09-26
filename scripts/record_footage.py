@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """record_footage.py — drive real pages in real time, record them, mark where the input starts.
 
   python3 scripts/record_footage.py footage.json --out footage/

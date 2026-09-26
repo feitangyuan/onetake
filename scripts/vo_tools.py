@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """vo_tools.py — narration for a film: voice lines, word times, line starts, subtitles. One line of lines.txt = one VO line.
 
   KPY=~/.cache/kokoro/venv/bin/python

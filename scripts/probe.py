@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """probe.py — read a composition's motion in numbers: what is on screen, how it moves, what carries across beats.
 
   python3 scripts/probe.py comp.html                          # continuity + curves summary

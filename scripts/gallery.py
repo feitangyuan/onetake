@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """gallery.py — render the motion library's sheets: frames of each move above its speed graph.
 
   python3 scripts/gallery.py                        # every demo in gallery/gallery.html → gallery/sheets/<name>.png

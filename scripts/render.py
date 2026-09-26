@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """render.py — seek a composition frame by frame, screenshot, encode, mux the SFX.
 
   python3 scripts/render.py comp.html --out draft.mp4 --sfx sfx.wav           # review draft: 1920×1080, 30 fps, shutter 180°

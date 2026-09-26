@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# onetake · © 2026 Patrick (github.com/feitangyuan) · PolyForm Noncommercial 1.0.0 · lineage otk-7f3e1c
 """stills.py — a contact sheet of chosen moments, to look before rendering.
 
   python3 scripts/stills.py comp.html --times 0.7,2.4,3.8,6.2,9.9,12.7 --out stills.png
