@@ -1,4 +1,9 @@
-# onetake
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo/onetake-wordmark-on-cream.svg">
+    <img src="assets/logo/onetake-wordmark.svg" alt="onetake" height="90">
+  </picture>
+</h1>
 
 > **Motion films that never cut to the next slide.** A Claude Agent Skill that makes product launch films, teasers and feature demos where every beat grows out of the one before — one continuous take, not a stack of scenes.
 > **一镜到底的连贯动效。** 做产品发布片、预告片、功能演示：每一个画面都从上一个画面里长出来，是一整条连续的镜头，而不是一张张轮流出场的"PPT"。
