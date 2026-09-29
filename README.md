@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo/onetake-icon.svg" alt="onetake icon" width="120">
+</p>
+
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo/onetake-wordmark-on-cream.svg">
