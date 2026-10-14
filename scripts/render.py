@@ -208,6 +208,8 @@ def main():
     print(f"{N} frames, {captures} captures ({still} still frames skipped the shutter, {cuts} kept a cut hard) in {secs:.0f}s on {nw} workers; page errors: {errs[:3] or 'none'}")
     cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(a.fps), "-i", f"{fr}/%05d.png"]
     if a.sfx: cmd += ["-i", os.path.abspath(a.sfx)]
+    # Screenshots are sRGB: convert with the BT.709 matrix and tag the stream, or ffmpeg uses BT.601 while players decode untagged HD as BT.709.
+    cmd += ["-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv"]
     cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", str(a.crf), "-pix_fmt", "yuv420p", "-profile:v", "high", "-level", "5.2", "-movflags", "+faststart"]
     if a.sfx: cmd += ["-c:a", "aac", "-b:a", "256k", "-shortest"]
     subprocess.run(cmd + [out], check=True)

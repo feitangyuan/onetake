@@ -124,7 +124,7 @@ the canvas draws in under 1 ms), so render.py deals the frames to `--workers` pr
 
 render.py writes `<out>.render.json` (fps, scale, shutter, samples — a count, or `adaptive` with captures per moving
 frame — workers, still and cut frames, captures, seconds); verify_promo.py reads it.
-PNG frames, libx264 crf 16, `yuv420p`, SFX muxed in the same pass. Footage stays 30 fps inside a 60 fps render
+PNG frames, libx264 crf 16, `yuv420p` converted and tagged as BT.709, SFX muxed in the same pass. Footage stays 30 fps inside a 60 fps render
 (each frame shown twice); the composition's own motion is what gets the 60.
 
 ## A camera
