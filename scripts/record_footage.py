@@ -59,7 +59,7 @@ async def run_steps(pg, steps, sc, log, name):
 
 async def main():
     ap = argparse.ArgumentParser(); ap.add_argument("config"); ap.add_argument("--out", default="footage"); a = ap.parse_args()
-    cfg = json.load(open(a.config)); out = os.path.abspath(a.out); os.makedirs(out, exist_ok=True)
+    cfg = json.load(open(a.config, encoding="utf-8")); out = os.path.abspath(a.out); os.makedirs(out, exist_ok=True)
     W, H = cfg.get("viewport", [1920, 1200]); cs = cfg.get("coord_space", [W, H]); sc = (W / cs[0], H / cs[1])
     log = {}
     async with async_playwright() as p:

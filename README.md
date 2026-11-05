@@ -157,6 +157,9 @@ recording"*, *"my motion video feels like a slideshow — fix it"*.
 
 **Requires** python3 with `playwright` (chromium), `numpy`, `scipy`, `Pillow`, `matplotlib` (`opencv-python` for
 reference analysis), `ffmpeg`, `node`. Narration adds `faster-whisper` and Kokoro TTS. Music is royalty-free by default.
+On Windows, run the scripts with `python` where the docs say `python3` (there `python3` can be the Microsoft Store
+alias rather than the Python that has these packages), and set `PYTHONUTF8=1` so their output (`·`, `→`, `≥`) is
+not garbled when piped.
 
 | | |
 |---|---|
@@ -242,6 +245,7 @@ git clone https://github.com/feitangyuan/onetake.git ~/.agents/skills/onetake
 
 **依赖**：python3（`playwright` + chromium、`numpy`、`scipy`、`Pillow`、`matplotlib`，分析参考片需要 `opencv-python`）、`ffmpeg`、`node`。
 配音需要 `faster-whisper` 和 Kokoro TTS。音乐默认用免版权曲库。
+Windows 上，文档里写 `python3` 的地方改用 `python`（那里的 `python3` 可能是微软商店的别名，不是装了这些包的 Python），并设置 `PYTHONUTF8=1`，否则脚本输出里的 `·`、`→`、`≥` 经管道读取时会乱码。
 
 ### 许可证
 

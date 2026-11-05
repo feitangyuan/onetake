@@ -34,7 +34,7 @@ captures on the frame time's side of it are averaged, so a cut stays a cut inste
 Writes <out>.render.json next to the film (fps, scale, shutter, samples, workers, frames, captures, cut frames,
 seconds); verify_promo.py reads it to know whether fast moves were rendered with blur.
 """
-import argparse, asyncio, io, json, math, multiprocessing, os, shutil, subprocess, time
+import argparse, asyncio, io, json, math, multiprocessing, os, shutil, subprocess, sys, time
 from concurrent.futures import ProcessPoolExecutor, wait
 import numpy as np
 from PIL import Image
@@ -95,7 +95,8 @@ def integrate_png(pngs):
     return LIN_TO_SRGB[idx], len(keep) < len(pngs)
 
 
-GPU_ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-gpu-rasterization"]
+# ANGLE backend: Metal, or D3D11 on Windows (metal there makes every screenshot fail)
+GPU_ARGS = ["--use-angle=" + ("d3d11" if sys.platform == "win32" else "metal"), "--enable-gpu", "--ignore-gpu-blocklist", "--enable-gpu-rasterization"]
 
 
 def work(job):
@@ -198,7 +199,7 @@ def main():
     ap.add_argument("--dur", type=float, default=None); ap.add_argument("--sfx", default=None); ap.add_argument("--crf", type=int, default=16)
     ap.add_argument("--keep-frames", action="store_true")
     ap.add_argument("--recycle", type=int, default=150, help="relaunch each worker's browser after this many frames (0 = never)")
-    ap.add_argument("--gpu", action="store_true", help="launch Chromium on the GPU (ANGLE/Metal) — WebGL comps: 11k instanced PBR meshes 652 → 168 ms a capture")
+    ap.add_argument("--gpu", action="store_true", help="launch Chromium on the GPU (ANGLE/Metal, D3D11 on Windows) — WebGL comps: 11k instanced PBR meshes 652 → 168 ms a capture")
     ap.add_argument("--resume", action="store_true", help="keep _frames/ from a run that died and render only the missing frames (counts in the log cover this run only)")
     a = ap.parse_args()
     if a.final:
