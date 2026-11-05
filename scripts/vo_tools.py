@@ -101,7 +101,7 @@ def cmd_words(a):
                 print(f"  line {i}: whisper heard {len(w)} words, the line has {len(own)} — kept whisper's spelling", file=sys.stderr)
         out[str(i)] = w
         print(i, " ".join(f"{x[0]}@{x[1]:.2f}" for x in w))
-    json.dump(out, open(os.path.join(a.dir, "words.json"), "w"), ensure_ascii=False)
+    json.dump(out, open(os.path.join(a.dir, "words.json"), "w", encoding="utf-8"), ensure_ascii=False)
 
 
 # ── plan ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ def morae(s):
 
 def cmd_subs(a):
     lines = read_lines(a.lines); reads = read_lines(a.read) if a.read else lines
-    words = json.load(open(os.path.join(a.dir, "words.json"))); plan = json.load(open(os.path.join(a.dir, "plan.json")))
+    words = json.load(open(os.path.join(a.dir, "words.json"), encoding="utf-8")); plan = json.load(open(os.path.join(a.dir, "plan.json")))
     subs = []
     for i, line in enumerate(lines, 1):
         t0, d, w = plan["VO"][i - 1], plan["durs"][i - 1], words.get(str(i), [])
@@ -168,7 +168,7 @@ def cmd_subs(a):
             s0 = t0 + starts[j] - (0.05 if j == 0 else 0)
             e = t0 + starts[j + 1] if j + 1 < len(cs) else t0 + d + 0.05
             subs.append([round(s0, 2), round(e, 2), c])
-    json.dump(subs, open(os.path.join(a.dir, "subs.json"), "w"), ensure_ascii=False)
+    json.dump(subs, open(os.path.join(a.dir, "subs.json"), "w", encoding="utf-8"), ensure_ascii=False)
     for q in subs:
         print(f"{q[0]:6.2f} {q[1]:6.2f}  {q[2]}")
 
