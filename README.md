@@ -17,8 +17,8 @@
 [![Cases](https://img.shields.io/badge/Cases-11%20films-orange.svg)](cases/)
 [![Continuity](https://img.shields.io/badge/Continuity-measured%20per%20boundary-brightgreen.svg)](scripts/verify_promo.py)
 
-**▶ See the films and get onetake Pro → [onetakemotion.com](https://onetakemotion.com)**
-**▶ 看成片、获取 onetake Pro → [onetakemotion.com](https://onetakemotion.com)**
+**▶ Free for noncommercial use. Making films for clients or a business? [onetake Pro](https://onetakemotion.com) adds a commercial licence and every film's source — $79, one time.**\
+**▶ 免费版仅限非商业用途。接客户的活或公司使用，请用 [onetake Pro](https://onetakemotion.com)：商业授权，加每部片子的完整源码，一次性 $79。**\
 **▶ New films every week → [@paojiaofty](https://x.com/paojiaofty) on X**
 
 ![onetake launch](assets/hero.gif)
