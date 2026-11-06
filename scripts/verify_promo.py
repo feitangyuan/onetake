@@ -12,8 +12,9 @@ Legs (each prints a number and PASS / WARN / FAIL; only FAIL fails the verdict):
   not-flat    advisory: the energy map's row profile varies (std of row means / grand mean >= 0.35). It passed the
               rejected Pocket Weather v1 (0.54) and failed the accepted v3 (0.33), so it no longer decides.
   audio       (if the file has audio) peak <= -3 dBFS, 0 clipped samples, >= 15 % of 1/12 s frames quiet.
-  continuity  (with --comp) probe.py's carry score: FAIL < 0.5, WARN < 0.7. Every rhythm leg above passed both rejected
-              Pocket Weather cuts; this one fails them (v1 0.00, v2 0.40; accepted motion-web 0.56, v3 0.75).
+  continuity  (with --comp) probe.py's carry score: FAIL < 0.5, WARN < 0.7 or no score (only __track points). Every
+              rhythm leg above passed both rejected Pocket Weather cuts; this one fails them (v1 0.00, v2 0.40; accepted
+              motion-web 0.56, v3 0.75).
   curves      (with --comp) FAIL when something travels more than 80 px per frame (normalised to 1920 wide, at the
               film's fps) in a film without shutter blur: a render defect, fixed by rendering with render.py. Blur is
               read from <film>.render.json (render.py writes it), else from the film itself (analyze_ref.py smear
@@ -82,8 +83,11 @@ def main():
         vfps = film_fps(a.video)
         res = asyncio.run(probe.collect(a.comp, fps=vfps)); ct = probe.continuity(res); cv = probe.curves(res)
         bare = [e["t"] for e in ct["events"] if not e["exempt"] and e["kind"] == "bare"]
-        state = "FAIL" if ct["score"] < 0.5 else "WARN" if ct["score"] < 0.7 else "PASS"
-        oks.append(leg("continuity", state, f"carry score {ct['score']:.2f} over {ct['considered']} boundaries; nothing carried at {bare or '—'} (probe.py lists each)"))
+        if ct["score"] is None:
+            oks.append(leg("continuity", "WARN", "no score: nothing tracked has an area (__track points carry nothing; give carriers a box)"))
+        else:
+            state = "FAIL" if ct["score"] < 0.5 else "WARN" if ct["score"] < 0.7 else "PASS"
+            oks.append(leg("continuity", state, f"carry score {ct['score']:.2f} over {ct['considered']} boundaries; nothing carried at {bare or '—'} (probe.py lists each)"))
         if info:
             blurred = info.get("shutter", 0) > 0
             blur = f"shutter {info['shutter']:g}° (render.json)" if blurred else "rendered with --shutter 0"
