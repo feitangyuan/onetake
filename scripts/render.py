@@ -231,6 +231,8 @@ def main():
           + (f"; relaunched a closed browser {rel}×" if (rel := sum(r.get('relaunched', 0) for r in res)) else ""))
     cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(a.fps), "-i", f"{fr}/%05d.png"]
     if a.sfx: cmd += ["-i", os.path.abspath(a.sfx)]
+    # players read untagged HD as BT.709, but ffmpeg converts RGB with the BT.601 matrix unless told otherwise
+    cmd += ["-vf", "scale=out_color_matrix=bt709,setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709"]
     cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", str(a.crf), "-pix_fmt", "yuv420p", "-profile:v", "high", "-level", "5.2", "-movflags", "+faststart"]
     if a.sfx: cmd += ["-c:a", "aac", "-b:a", "256k", "-shortest"]
     subprocess.run(cmd + [out], check=True)
