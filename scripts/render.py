@@ -232,7 +232,7 @@ def main():
     cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(a.fps), "-i", f"{fr}/%05d.png"]
     if a.sfx: cmd += ["-i", os.path.abspath(a.sfx)]
     cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", str(a.crf), "-pix_fmt", "yuv420p", "-profile:v", "high", "-level", "5.2", "-movflags", "+faststart"]
-    if a.sfx: cmd += ["-c:a", "aac", "-b:a", "256k", "-shortest"]
+    if a.sfx: cmd += ["-af", "apad", "-c:a", "aac", "-b:a", "256k", "-shortest"]   # a score shorter than the film is padded with silence, so -shortest ends on the last frame
     subprocess.run(cmd + [out], check=True)
     if not a.keep_frames: shutil.rmtree(fr, ignore_errors=True)
     meta = {"comp": comp, "fps": a.fps, "scale": a.scale, "size": [a.width * a.scale, a.height * a.scale], "shutter": a.shutter if a.shutter > 0 else 0,
