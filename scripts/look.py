@@ -36,7 +36,7 @@ TYPO = "“”‘’–—…·×→←↑↓✓•°±%€£"          # common
 
 
 def load_db():
-    return json.loads(LOOKS.read_text())
+    return json.loads(LOOKS.read_text(encoding="utf-8"))
 
 
 def resolve(spec, db):
@@ -45,7 +45,7 @@ def resolve(spec, db):
         return dict(db["looks"][spec], name=spec)
     p = pathlib.Path(spec)
     if p.suffix == ".json" and p.exists():
-        look = json.loads(p.read_text())
+        look = json.loads(p.read_text(encoding="utf-8"))
         look.setdefault("name", p.stem)
         missing = [c for c in COLORS if c not in look.get("color", {})] + [r for r in ROLES if r not in look.get("type", {})]
         if missing:
@@ -164,7 +164,7 @@ def build_faces(look, db, chars, cjk=None, prefix=""):
 def comp_chars(paths):
     text = ""
     for p in paths:
-        s = pathlib.Path(p).read_text(errors="ignore")
+        s = pathlib.Path(p).read_text(encoding="utf-8", errors="ignore")
         text += re.sub(r"base64,[A-Za-z0-9+/=]+", "", s)
     used = {c for c in text if ord(c) >= 0x20}
     return used, used | {chr(c) for c in range(0x20, 0x7F)} | set(TYPO)
@@ -240,7 +240,7 @@ def cmd_apply(a):
     faces, types, missing = build_faces(look, db, sorted(chars), a.cjk)
     out = pathlib.Path(a.out) if a.out else comp.with_name("look.js")
     js = render_js(look, faces, types, len(chars))
-    out.write_text(js)
+    out.write_text(js, encoding="utf-8")
     ok, rows = check(look)
     print(f"{out}  ·  look {look['name']}  ·  {len(js) / 1024:.0f} KB  ·  {len(chars)} characters")
     for role, t in types.items():
@@ -254,7 +254,7 @@ def cmd_apply(a):
             print(f"  ! {' / '.join(faces_)} lack{'s' if len(faces_) == 1 else ''} {len(shown)} character(s) the comp sets: {shown[:40]}"
                   f"{'…' if len(shown) > 40 else ''} — they fall back to the system face"
                   + ("; pass --cjk <font file>" if any(ord(c) > 0x2e7f for c in shown) else ""))
-    if "look.js" not in comp.read_text(errors="ignore"):
+    if "look.js" not in comp.read_text(encoding="utf-8", errors="ignore"):
         print(f"  → add <script src=\"{out.name}\"></script> to {comp.name} and chain __ready on LOOK.ready")
 
 
@@ -307,7 +307,7 @@ def cmd_sheet(a):
     out = pathlib.Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".html")
-    tmp.write_text(html)
+    tmp.write_text(html, encoding="utf-8")
     from playwright.sync_api import sync_playwright
     rows = -(-len(tiles) // 2)
     with sync_playwright() as p:
@@ -381,7 +381,7 @@ def cmd_from_shot(a):
             "type": base["type"]}
     txt = json.dumps(look, indent=2, ensure_ascii=False)
     if a.out:
-        pathlib.Path(a.out).write_text(txt + "\n")
+        pathlib.Path(a.out).write_text(txt + "\n", encoding="utf-8")
         print(f"{a.out}  ·  faces from '{base['name']}' — edit the file to change them")
     else:
         print(txt)
