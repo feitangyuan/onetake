@@ -6,7 +6,7 @@
 window.__seek  = async (t) => { ... ; return true; }   // sets every style for time t; resolves when images are decoded
 window.__ready = document.fonts.ready.then(() => { measure(); simulate(); return seek(0); });
 window.__meta  = { dur: 15, fps: 30 };                 // render.py reads dur; probe.py also reads cuts: [t, …] (bare cuts you mean) and inFrame: {id: [t0, t1] | [t0, t1, 'whole']}
-window.__track = (t) => ({ hand: [x, y], card: { x, y, w, h, op } });   // optional — probe.py follows these instead of auto-tracking; with a camera, boxes on screen
+window.__track = (t) => ({ hand: [x, y], card: { x, y, w, h, op } });   // optional — probe.py follows these instead of auto-tracking; with a camera, boxes on screen; a point carries no boundary
 window.__motion = (t0, t1) => px;                     // optional — farthest on-screen travel between t0 and t1 (elements + camera); render.py sizes each frame's shutter from it
 ```
 

@@ -11,7 +11,8 @@ No annotations needed. After every __seek(t) the probe lists what is visible and
   canvas  every drawImage / fillText / fill / stroke, located through the context transform (the hooks are
           installed before the page's own scripts run). Full-canvas fills count as ground. Clip paths are not
           tracked: a line still hidden by its mask counts as visible.
-A page that defines window.__track(t) → {id: [x, y] | {x, y, w, h, op}} is read from that instead.
+A page that defines window.__track(t) → {id: [x, y] | {x, y, w, h, op}} is read from that instead. A point has no
+area: curves follow it, but it carries no boundary.
 
 Identity: a DOM element is its path (image sources with frame numbers folded, so footage stays one element);
 a canvas draw is its image source / text / fill style, numbered by draw order within the frame.
@@ -21,7 +22,8 @@ continuity  A boundary is a 0.4 s window in which most of the on-screen area cha
             the hand, the subject, a container becoming the next thing; ANCHORED when the only survivor is large
             and unchanged (a frame whose content swaps); BARE when nothing survives. Exempt: boundaries inside a
             burst of hard cuts (>= 3 cuts within 1.5 s — staccato hits), the last 1.2 s (end card), and times in
-            window.__meta.cuts. score = (carried + anchored/2) / boundaries considered.
+            window.__meta.cuts. score = (carried + anchored/2) / boundaries considered; no score when nothing tracked
+            has an area.
 curves      Each element's track is cut into moves. Per move: path, t80 (share of the move's duration spent
             before 80 % of the path is covered), peak px/frame at --fps (normalised to 1920 wide), overshoot.
             Film: the peak, and the share of all travel made on soft curves (t80 >= .55).
@@ -246,7 +248,7 @@ def continuity(res, dt=0.4, j_max=0.2, cut_j=0.3, min_content=0.004):
         strong, weak = [], []
         for k in set(A) & set(B):
             a, b = A[k], B[k]
-            if min(a["op"], b["op"]) < 0.15:
+            if min(a["op"], b["op"]) < 0.15 or min(a["vis"], b["vis"]) <= 0:   # a __track point has nothing drawn to carry
                 continue
             move = math.hypot(b["x"] - a["x"], b["y"] - a["y"]) / diag
             scale = abs(math.log(math.sqrt(max(b["w"] * b["h"], 1.0)) / math.sqrt(max(a["w"] * a["h"], 1.0))))
@@ -265,8 +267,11 @@ def continuity(res, dt=0.4, j_max=0.2, cut_j=0.3, min_content=0.004):
         top = lambda s: [short(k) for k, _ in sorted(s.items(), key=lambda kv: -_weight(kv[1], area))[:2]]
         ev["before"], ev["after"] = top(A), top(B)
     considered = [e for e in events if not e["exempt"]]
-    score = 1.0 if not considered else sum(1.0 if e["kind"] == "carried" else 0.5 if e["kind"] == "anchored" else 0.0 for e in considered) / len(considered)
-    return {"score": round(score, 2), "events": events, "considered": len(considered),
+    if max(content, default=0.0) < min_content:                 # only points tracked: no boundary can be found, so there is no score
+        score = None
+    else:
+        score = round(1.0 if not considered else sum(1.0 if e["kind"] == "carried" else 0.5 if e["kind"] == "anchored" else 0.0 for e in considered) / len(considered), 2)
+    return {"score": score, "events": events, "considered": len(considered),
             "bare": sum(e["kind"] == "bare" for e in considered), "cuts": len(cuts), "bursts": [(round(a, 2), round(b, 2)) for a, b in bursts]}
 
 
@@ -389,8 +394,11 @@ def report(res, ct, cv):
     if res.get("failed"):
         print(f"  !! __seek threw at {len(res['failed'])} samples, first at t={res['failed'][0][0]}: {res['failed'][0][1]}")
     kinds = [e["kind"] for e in ct["events"] if not e["exempt"]]
-    print(f"continuity  score {ct['score']:.2f}  — {ct['considered']} boundaries: {kinds.count('carried')} carried, {kinds.count('anchored')} anchored, "
-          f"{kinds.count('bare')} bare; {len(ct['events']) - ct['considered']} exempt; hard cuts {ct['cuts']}, bursts {ct['bursts']}")
+    if ct["score"] is None:
+        print("continuity  no score: nothing tracked has an area (__track points carry nothing; give carriers a box)")
+    else:
+        print(f"continuity  score {ct['score']:.2f}  — {ct['considered']} boundaries: {kinds.count('carried')} carried, {kinds.count('anchored')} anchored, "
+              f"{kinds.count('bare')} bare; {len(ct['events']) - ct['considered']} exempt; hard cuts {ct['cuts']}, bursts {ct['bursts']}")
     for e in ct["events"]:
         why = e["exempt"] or e["kind"]
         via = ", ".join(e["carriers"] or e["anchors"]) or "—"
